@@ -1,0 +1,1 @@
+../../../.agents/skills/freelance-ops/SKILL.md

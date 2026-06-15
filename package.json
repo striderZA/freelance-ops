@@ -1,0 +1,52 @@
+{
+  "name": "freelance-ops",
+  "version": "0.1.0",
+  "description": "AI-powered freelance and short-term contract pipeline built on AI coding CLIs.",
+  "private": true,
+  "scripts": {
+    "doctor": "node doctor.mjs",
+    "verify": "node verify-pipeline.mjs",
+    "normalize": "node normalize-statuses.mjs",
+    "dedup": "node dedup-tracker.mjs",
+    "merge": "node merge-tracker.mjs",
+    "pdf": "node generate-pdf.mjs",
+    "sync-check": "node cv-sync-check.mjs",
+    "update:check": "node update-system.mjs check",
+    "update:test": "node updater-migration-tests.mjs",
+    "update": "node update-system.mjs apply",
+    "rollback": "node update-system.mjs rollback",
+    "liveness": "node check-liveness.mjs",
+    "scan": "node scan.mjs",
+    "scan:full": "node scan-ats-full.mjs",
+    "validate:portals": "node validate-portals.mjs",
+    "tracker": "node tracker.mjs",
+    "patterns": "node analyze-patterns.mjs",
+    "gemini:eval": "node gemini-eval.mjs"
+  },
+  "keywords": [
+    "ai",
+    "freelance",
+    "freelance-ops",
+    "freelanceops",
+    "job-search",
+    "claude-code",
+    "opencode",
+    "automation"
+  ],
+  "author": "Jaco du Preez <jaco.dupreez7@gmail.com>",
+  "homepage": "https://github.com/jacodupreez/freelance-ops",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jacodupreez/freelance-ops"
+  },
+  "bugs": {
+    "url": "https://github.com/jacodupreez/freelance-ops/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.0.0",
+    "js-yaml": "^4.1.1",
+    "playwright": "1.58.1"
+  }
+}
