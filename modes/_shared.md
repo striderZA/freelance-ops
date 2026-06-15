@@ -28,30 +28,101 @@
 
 ---
 
-## Scoring System
+## Ethical Use — MANDATORY
 
-The lead evaluation uses 6 blocks (A-F) with a global score of 1-5. Block G is a separate legitimacy tier (see `modes/blocks/lead-blocks.md`).
+**Quality over quantity.** This system exists to find genuine matches, not to mass-apply. Every proposal you send costs a human's attention.
 
-| Dimension | What it measures |
-|-----------|-----------------|
-| Match with profile | Skills, experience, proof points, portfolio alignment |
-| Niche fit | How well the lead maps to the user's target niches (from _profile.md) |
-| Rate strategy | Target rate (from `config/rates.yml`) vs market vs lead budget |
-| Client / platform signals | Payment history, hire rate, repeat-hire pattern, country risk |
-| Proposal angle | Differentiators, social proof, available proof points |
-| Engagement & risk | Terms (IP, NDA, milestones, escrow, kill fee), red flags |
-| **Global** | Weighted average of above |
+### The hard rules
 
-**Score interpretation:**
-- 4.5+ → Strong match, recommend proposing immediately
-- 4.0-4.4 → Good match, worth proposing
-- 3.5-3.9 → Decent but not ideal, propose only if specific reason
-- Below 3.5 → Recommend against proposing (see Ethical Use in AGENTS.md)
+1. **NEVER submit a proposal, application, or message without the user reviewing it first.** Draft, fill forms, generate PDFs — but STOP before clicking Send/Submit/Apply. The user makes the final call.
+2. **NEVER recommend a lead with a global score below 4.0/5** unless the user explicitly overrides. Below 3.5 is a strong "do not propose."
+3. **NEVER skip Block G (Legitimacy).** A `likely-scam` lead gets no proposal draft, regardless of score.
+4. **ALWAYS disclose why a score is high or low.** Show your work in the report. Don't expect blind trust.
+5. **Respect the user's time.** 10 well-targeted proposals > 50 generic blasts. Guide toward fewer, better opportunities.
 
-**Score is NOT the only gate.** Block G (Legitimacy) is a separate tier that can hard-stop a proposal regardless of score:
+### When the user disagrees
+
+The user can override any recommendation. If they choose to pursue a low-scoring lead, respect their judgment — but note the risk in the evaluation report.
+
+---
+
+## Scoring Framework
+
+The lead evaluation uses 6 weighted blocks (A-F). Each block scores 0-5. The global score is a weighted average, mapped to a letter grade. Block G (Legitimacy) is a separate tier that gates the rest — see below.
+
+### Block weights and rationale
+
+| Block | Weight | What it measures | Why it matters for freelancers |
+|-------|--------|------------------|-------------------------------|
+| **A — Lead Summary** | 1.0x | Scope, deliverables, budget, timeline, engagement shape | Foundation for everything else. A vague lead can't be scored accurately. |
+| **B — Profile Match** | 2.0x | Skills, proof points, portfolio alignment vs. lead needs | The core question: can you do the work? Double-weighted because it predicts delivery success. |
+| **C — Rate Strategy** | 1.5x | Target rate vs. market vs. lead budget, rate-floor compliance | Freelancers don't have a fixed salary — rate is the primary financial decision. Underpricing hurts the entire market. |
+| **D — Client/Platform Research** | 1.0x | Payment history, hire rate, repeat-hire pattern, country risk | Can the client pay? Will they be a good client? Direct / referral leads also get 20-30% premium. |
+| **E — Proposal Strategy** | 1.0x | Differentiators, angle, social proof mapped to the lead | How you win. A strong match means nothing with a generic proposal. |
+| **F — Engagement & Risk** | 1.5x | Terms (IP, NDA, milestones, escrow, kill fee), red flags | Freelancers bear more risk than employees. Bad terms can make a good lead toxic. |
+
+**Weighted score = Σ(block_score × weight) / Σ(weight).** Maximum: 5.0.
+
+### Grade mapping
+
+| Grade | Score | Action |
+|-------|-------|--------|
+| A | 4.5–5.0 | Strong match — recommend proposing immediately |
+| B | 4.0–4.4 | Good match — worth proposing |
+| C | 3.5–3.9 | Decent but not ideal — propose only if specific reason |
+| D | 3.0–3.4 | Weak match — recommend against |
+| F | < 3.0 | Strongly recommend against |
+
+**Score is NOT the only gate.** Block G (Legitimacy) can hard-stop a proposal regardless of score:
 - `verified` → proceed normally
-- `caution` → proceed with eyes open; flag the specific concerns in the proposal
-- `likely-scam` → DO NOT PROPOSE. The score is irrelevant.
+- `caution` → proceed with eyes open; flag concerns in the proposal
+- `likely-scam` → DO NOT PROPOSE. Score is irrelevant.
+
+For detailed block-level heuristics, see [`modes/blocks/lead-blocks.md`](./blocks/lead-blocks.md).
+
+---
+
+## Evidence-Driven Evaluation
+
+Every evaluation must be traceable to specific lines in specific files. The AI's training data is NOT a source of truth.
+
+### What to cite
+
+| Claim type | Source | Example |
+|-----------|--------|---------|
+| User's skills or experience | `profile.md` line N | "Section 3 lists 4 years of RAG deployment" |
+| User's rate targets | `config/rates.yml` | "rate_floor is $100/hr, target $150/hr for AI consulting" |
+| User's niche positioning | `modes/_profile.md` | "Primary niche: LLM app development" |
+| User's proof points | `article-digest.md` or `profile.md` | "Reduced p95 latency 83% (profile.md:12)" |
+| Market rates | WebSearch (Glassdoor, Toptal, etc.) | "Upwork rate insights show $120-180/hr for this niche" |
+| Lead budget or scope | The lead description | "Lead states $5k-10k fixed budget for AI chatbot MVP" |
+
+### Defaults when sources conflict
+
+1. `article-digest.md` overrides `profile.md` for metrics and case studies
+2. `modes/_profile.md` overrides `modes/_shared.md` for positioning and framing
+3. Lead description overrides assumptions about scope
+4. User's explicit instruction overrides everything
+
+---
+
+## Key Cross-References
+
+| Reference | File | Purpose |
+|-----------|------|---------|
+| Block-level heuristics | `modes/blocks/lead-blocks.md` | Detailed scoring guidance for each block A-F |
+| User profile | `modes/_profile.md` | Niches, narrative, writing style, negotiation scripts |
+| Identity & targets | `config/profile.yml` | Name, location, timezone, role targets, salary range |
+| Rate card | `config/rates.yml` | Rate floor, target rates per niche, per-platform overrides |
+| Lead tracker | `data/leads.md` | Every evaluated lead gets registered here |
+| CV / canonical bio | `profile.md` | Skills, experience, projects, education |
+| Proof points | `article-digest.md` | Detailed case studies and portfolio metrics |
+| Scanner config | `config/platforms.yml` | Company queries, title filters, platform API config |
+| Writing samples | `writing-samples/` | Past proposals and client-facing text for style calibration |
+| Report archive | `reports/` | All evaluation reports (format: `{###}-{slug}-{date}.md`) |
+| Tracker additions | `batch/tracker-additions/` | TSV files for merge via `merge-tracker.mjs` |
+
+---
 
 ## Lead Legitimacy (Block G)
 
@@ -120,6 +191,23 @@ The system enforces a **rate floor** read from `config/rates.yml` and never draf
 - Equity-only / exposure-only
 - Significant unpaid "test task" before any commitment
 - Scope unclear + budget unclear = walk away
+
+## Anti-Patterns
+
+These patterns degrade evaluation quality. Actively guard against them.
+
+| Anti-pattern | What it looks like | How to avoid |
+|-------------|-------------------|-------------|
+| **Score inflation** | Giving a 4+ because the lead "looks interesting" without checking profile match | Score each block independently. Let the math produce the global score. |
+| **Scope-blind enthusiasm** | Rating a lead highly without reading the full description | Read the entire lead before scoring. Block A comes first for a reason. |
+| **Ignoring Block G** | Drafting a proposal for a `likely-scam` lead | Never score before running the legitimacy check. Block G gates everything. |
+| **Proposing without a profile** | Generating a proposal without reading `_profile.md` and `profile.md` first | Read both before any evaluation. The profile defines your positioning. |
+| **Template cloning** | Writing the same proposal for every lead | Adapt every proposal to the specific scope, niche, and client. Generic proposals lose. |
+| **Rate avoidance** | Avoiding the rate conversation because it's uncomfortable | Put the rate in the report header. Never draft below `rate_floor` without explicit override. |
+| **Hardcoding proof points** | Writing metrics from memory instead of reading the source files | Always read `profile.md` and `article-digest.md` at evaluation time. |
+| **The 100% trap** | Spending hours perfecting one lead instead of processing several | 80/20 rule: ship 10 proposals at 80% quality vs 1 at 100%. |
+
+---
 
 ## Global Rules
 
