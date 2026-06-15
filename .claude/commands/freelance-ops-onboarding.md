@@ -1,4 +1,4 @@
-# /freelance-opsonboarding (STUB)
+# /freelance-ops-onboarding (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 

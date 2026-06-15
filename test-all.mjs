@@ -572,11 +572,17 @@ if (
 
 console.log('\n8. Mode file integrity');
 
+// `latex.md` was removed in Plan 1 Task 3 when the latex mode was dropped
+// from the project. The remaining list is intentionally a subset (presence
+// check, not a full inventory) — modes added later (interview-prep, leads,
+// proposal, pitch, outreach, screening, nurture, portfolio, cover,
+// followup, update, etc.) are validated by their own file-existence paths
+// elsewhere in the suite.
 const expectedModes = [
   '_shared.md', '_profile.template.md', 'oferta.md', 'pdf.md', 'scan.md',
   'batch.md', 'apply.md', 'auto-pipeline.md', 'contacto.md', 'deep.md',
   'ofertas.md', 'pipeline.md', 'project.md', 'tracker.md', 'training.md',
-  'interview.md', 'latex.md',
+  'interview.md',
 ];
 
 for (const mode of expectedModes) {
@@ -595,16 +601,25 @@ if (shared.includes('_profile.md')) {
   fail('_shared.md does NOT reference _profile.md');
 }
 
-for (const skillPath of ['.claude/skills/freelance-ops/SKILL.md', '.agents/skills/freelance-ops/SKILL.md']) {
+// Stub contract: the .claude and .opencode skill locations are thin shims
+// that defer to the canonical .agents skill. The previous assertion checked
+// for a specific menu entry (`/freelance-ops latex`) which went away when
+// the latex mode was dropped in Plan 1 Task 3. The general-purpose check
+// here validates the new contract: every shim must reference the canonical
+// skill path. This preserves the test's intent (a real bug today would be a
+// shim that points at a stale or wrong canonical) without coupling to a
+// specific menu entry. The canonical .agents file is intentionally excluded
+// from the loop — it IS the canonical and has nothing to reference.
+for (const skillPath of ['.claude/skills/freelance-ops/SKILL.md', '.opencode/skills/freelance-ops/SKILL.md']) {
   if (!fileExists(skillPath)) {
     fail(`${skillPath} is missing`);
     continue;
   }
   const skill = readFile(skillPath);
-  if (skill.includes('/freelance-ops latex')) {
-    pass(`${skillPath} exposes /freelance-ops latex in discovery menu`);
+  if (skill.includes('.agents/skills/freelance-ops/SKILL.md')) {
+    pass(`${skillPath} references canonical skill`);
   } else {
-    fail(`${skillPath} does not expose /freelance-ops latex in discovery menu`);
+    fail(`${skillPath} does NOT reference canonical skill .agents/skills/freelance-ops/SKILL.md`);
   }
 }
 
@@ -820,12 +835,24 @@ for (const f of cliWrappers) {
   }
 }
 
-// ── 12. SKILL SYMLINK INTEGRITY ─────────────────────────────
+// ── 12. SKILL STUB / SYMLINK INTEGRITY ─────────────────────────────
+// Plan 1 Task 19 replaced symlinks with regular stub files (the canonical
+// shim lives at .agents/skills/freelance-ops/SKILL.md and the .claude /
+// .opencode shims are short markdown files that link back to it). This
+// was done because creating real symlinks requires elevated privileges on
+// Windows and broke the contributor workflow.
+//
+// The integrity contract that replaced the symlink check is: each shim
+// must EITHER resolve to the canonical path (symlink form, valid on POSIX
+// systems) OR be a regular file whose body references the canonical
+// `.agents/skills/freelance-ops/SKILL.md` (stub form, the Windows-safe
+// default). Both forms are accepted so contributors on either platform
+// stay unblocked.
 
-console.log('\n12. Skill symlink integrity');
+console.log('\n12. Skill stub/symlink integrity');
 
 const canonicalSkill = '.agents/skills/freelance-ops/SKILL.md';
-const symlinks = [
+const shims = [
   '.claude/skills/freelance-ops/SKILL.md',
   '.opencode/skills/freelance-ops/SKILL.md',
 ];
@@ -838,27 +865,30 @@ try {
   fail(`Canonical skill not found: ${canonicalSkill}`);
 }
 
-for (const link of symlinks) {
-  let resolved = null;
-  let target = null;
-  try {
-    target = realpathSync(join(ROOT, link));
-  } catch {
-    target = null;
-  }
-  if (target === null) {
-    fail(`Symlink missing: ${link}`);
+for (const shim of shims) {
+  if (!fileExists(shim)) {
+    fail(`Skill shim missing: ${shim}`);
     continue;
   }
+  // Form 1: real symlink (resolves to canonical) — accepted on POSIX.
+  let real = null;
   try {
-    resolved = realpathSync(join(ROOT, link));
+    real = realpathSync(join(ROOT, shim));
   } catch {
-    resolved = null;
+    real = null;
   }
-  if (resolved === canonicalReal) {
-    pass(`${link} → canonical skill`);
+  if (real === canonicalReal) {
+    pass(`${shim} → canonical skill (symlink)`);
+    continue;
+  }
+  // Form 2: stub file whose body references the canonical — Windows-safe
+  // default. Realpath of a regular file is just the file itself, so we
+  // additionally check the body for the canonical reference.
+  const body = readFile(shim);
+  if (body.includes(canonicalSkill)) {
+    pass(`${shim} → canonical skill (stub references ${canonicalSkill})`);
   } else {
-    fail(`${link} resolves to ${resolved}, expected ${canonicalReal}`);
+    fail(`${shim} is neither a symlink to ${canonicalSkill} nor a stub that references it`);
   }
 }
 

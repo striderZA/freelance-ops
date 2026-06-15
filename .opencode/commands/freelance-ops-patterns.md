@@ -1,4 +1,4 @@
-# /freelance-opspatterns (STUB)
+# /freelance-ops-patterns (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 

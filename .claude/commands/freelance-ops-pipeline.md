@@ -1,4 +1,4 @@
-# /freelance-opspipeline (STUB)
+# /freelance-ops-pipeline (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 

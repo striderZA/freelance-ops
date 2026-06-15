@@ -1,4 +1,4 @@
-# /freelance-opsscreening (STUB)
+# /freelance-ops-screening (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 

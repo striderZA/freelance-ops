@@ -1,4 +1,4 @@
-# /freelance-opstracker (STUB)
+# /freelance-ops-tracker (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 

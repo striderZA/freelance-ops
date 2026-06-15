@@ -1,4 +1,4 @@
-# /freelance-opsproposal (STUB)
+# /freelance-ops-proposal (STUB)
 
 **Status:** STUB - command shell only. Mode content authored in Plan 2.
 
