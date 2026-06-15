@@ -15,12 +15,16 @@ import { fileURLToPath } from 'url';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 
 const freelance_ops = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md
-// (original). freelance_ops_TRACKER lets tests point the script at an isolated
-// fixture so the real user tracker is never touched.
+// Support all three layouts: data/leads.md (current freelance-ops default),
+// data/applications.md (boilerplate), and applications.md (legacy). Lookup
+// order is newest → oldest so a fresh setup lands on the new schema.
+// freelance_ops_TRACKER lets tests point the script at an isolated fixture so
+// the real user tracker is never touched.
 const APPS_FILE = process.env.freelance_ops_TRACKER
   ? process.env.freelance_ops_TRACKER
-  : existsSync(join(freelance_ops, 'data/applications.md'))
+  : existsSync(join(freelance_ops, 'data/leads.md'))
+    ? join(freelance_ops, 'data/leads.md')
+    : existsSync(join(freelance_ops, 'data/applications.md'))
     ? join(freelance_ops, 'data/applications.md')
     : join(freelance_ops, 'applications.md');
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -28,30 +32,54 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Ensure the target tracker directory exists in both normal and fixture mode.
 mkdirSync(dirname(APPS_FILE), { recursive: true });
 
-// Status advancement order (higher = more advanced in pipeline)
-// Aplicado > Rechazado because active application > terminal state
+// Status advancement order (higher = more advanced in pipeline).
+// Aplicado > Rechazado because active application > terminal state.
+// The freelance-ops pipeline is broader than the legacy FTE pipeline: it
+// spans the full engagement lifecycle from New lead all the way to Reviewed,
+// with terminal off-ramps (Rejected, Ghosted, Withdrew, Disputed) ranking low
+// so that fuzzy dedup never silently overwrites an in-flight engagement.
 const STATUS_RANK = {
-  // English canonicals (states.yml labels)
+  // Terminal off-ramps (lowest rank — drop first, never over-write active work)
+  'rejected': 1,
+  'ghosted': 1,
+  'withdrew': 1,
+  'withdrawn': 1,
+  'disputed': 1,
+  // Legacy terminal states (kept for backwards compat)
   'skip': 0,
   'discarded': 0,
-  'rejected': 1,
   'evaluated': 2,
-  'applied': 3,
-  'responded': 4,
-  'interview': 5,
-  'offer': 6,
+  // Main pipeline — order matches templates/states.yml
+  'new': 2,
+  'qualified': 3,
+  'proposed': 4,
+  'negotiating': 5,
+  'contracted': 6,
+  'in progress': 7,
+  'in-progress': 7,
+  'inprogress': 7,
+  'in_progress': 7,
+  'delivered': 8,
+  'invoiced': 9,
+  'paid': 10,
+  'reviewed': 11,
+  // Legacy active states (kept for backwards compat)
+  'applied': 4,
+  'responded': 5,
+  'interview': 6,
+  'offer': 7,
   // Spanish aliases — kept for backwards compat with existing tracker data
   'no_aplicar': 0,
   'no aplicar': 0,
   'descartado': 0,
   'descartada': 0,
-  'rechazado': 1,  // Terminal — below active states
+  'rechazado': 1,
   'rechazada': 1,
   'evaluada': 2,
-  'aplicado': 3,
-  'respondido': 4,
-  'entrevista': 5,
-  'oferta': 6,
+  'aplicado': 4,
+  'respondido': 5,
+  'entrevista': 6,
+  'oferta': 7,
 };
 
 /**
@@ -185,6 +213,13 @@ const protectedFuzzyPairs = new Set();
  */
 function roleMatch(a, b) {
   if (sameReportIdentity(a, b)) return true;
+  // Exact role match (case-insensitive, trimmed) is the strongest signal after
+  // report identity. Short freelance-ops roles like "AI consulting" share only
+  // one meaningful token, which the fuzzy matcher would reject as too
+  // permissive — but identical text is unambiguous and should dedup.
+  const aRole = String(a.role ?? '').trim().toLowerCase();
+  const bRole = String(b.role ?? '').trim().toLowerCase();
+  if (aRole && aRole === bRole) return true;
   if (!roleFuzzyMatch(a.role, b.role)) return false;
 
   // Fuzzy title matches are intentionally conservative once either row has
@@ -231,9 +266,41 @@ function parseScore(s) {
  */
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
+  // Support both legacy 9-column and freelance-ops 10-column schemas. The
+  // extra columns (Platform, Rate) sit between Role and Status; reading by
+  // fixed position is safe here because both layouts put Status at index 6
+  // and the column count discriminator is the 10th notes cell.
   if (parts.length < 9) return null;
   const num = parseInt(parts[1]);
   if (isNaN(num)) return null;
+  // Freelance schema: parts[3] = Client/Company, parts[4] = Role/Scope,
+  //   parts[5] = Platform, parts[6] = Status, parts[7] = Rate, parts[8] = Score,
+  //   parts[9] = Report, parts[10] = Notes.
+  // Legacy schema: parts[3] = Company, parts[4] = Role, parts[5] = Score,
+  //   parts[6] = Status, parts[7] = PDF, parts[8] = Report, parts[9] = Notes.
+  // Heuristic: if parts[5] looks like a Platform (free-form text, not a score)
+  // and the row has 11+ parts, treat it as the freelance schema.
+  const looksFreelance = parts.length >= 11
+    && !/^\d+\.?\d*\/5$/.test(parts[5])
+    && parts[5] !== ''
+    && !/^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|new|qualified|proposed|negotiating|contracted|in progress|delivered|invoiced|paid|reviewed|ghosted|withdrew|disputed)/i.test(parts[5]);
+  if (looksFreelance) {
+    return {
+      num,
+      date: parts[2],
+      company: parts[3],
+      clientOrCompany: parts[3],
+      role: parts[4],
+      roleOrScope: parts[4],
+      platform: parts[5] || '',
+      status: parts[6],
+      rate: parts[7] || '',
+      score: parts[8],
+      report: parts[9],
+      notes: parts[10] || '',
+      raw: line,
+    };
+  }
   return {
     num,
     date: parts[2],
