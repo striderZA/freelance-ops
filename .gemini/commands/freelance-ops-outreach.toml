@@ -1,0 +1,4 @@
+description = "freelance-ops: outreach (STUB - Plan 2)"
+prompt = """
+Read and execute modes/outreach.md with the user's argument.
+"""

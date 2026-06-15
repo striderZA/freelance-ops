@@ -1,0 +1,4 @@
+description = "freelance-ops: screening (STUB - Plan 2)"
+prompt = """
+Read and execute modes/screening.md with the user's argument.
+"""

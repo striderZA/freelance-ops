@@ -1,0 +1,4 @@
+description = "freelance-ops: menu (STUB - Plan 2)"
+prompt = """
+Show the freelance-ops menu or evaluate the lead at the URL/text given as the argument.
+"""

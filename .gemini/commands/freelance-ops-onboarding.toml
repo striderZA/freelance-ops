@@ -1,0 +1,4 @@
+description = "freelance-ops: onboarding (STUB - Plan 2)"
+prompt = """
+Read and execute modes/onboarding.md with the user's argument.
+"""

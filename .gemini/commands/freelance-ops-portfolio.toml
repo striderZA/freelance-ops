@@ -1,0 +1,4 @@
+description = "freelance-ops: portfolio (STUB - Plan 2)"
+prompt = """
+Read and execute modes/portfolio.md with the user's argument.
+"""
