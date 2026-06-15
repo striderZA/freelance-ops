@@ -336,7 +336,23 @@ try {
 }
 
 // Canonical states and aliases
-const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
+//
+// The freelance-ops state machine (templates/states.yml) has 14 canonical
+// states. Pre-freelance-ops merges only knew the 8-state legacy set, which
+// defaulted any unknown status to "Evaluated" — silent data loss in disguise
+// (a `in-progress` add would land on the tracker as `Evaluated` and never be
+// normalized to "In Progress" by normalize-statuses.mjs). We now accept BOTH
+// the legacy set and the freelance set: legacy rows stay readable, freelance
+// rows pass through unchanged, and normalize-statuses.mjs handles the rest.
+const CANONICAL_STATES = [
+  // Freelance-ops schema (14)
+  'New', 'Qualified', 'Proposed', 'Negotiating', 'Contracted',
+  'In Progress', 'Delivered', 'Invoiced', 'Paid', 'Reviewed',
+  'Rejected', 'Ghosted', 'Withdrew', 'Disputed',
+  // Legacy FTE schema (8) — kept for backwards-compatible reads
+  'Evaluated', 'Applied', 'Responded', 'Interview', 'Offer',
+  'Discarded', 'SKIP',
+];
 
 /**
  * Convert raw addition status text into one canonical tracker state.
@@ -369,6 +385,9 @@ function validateStatus(status) {
     'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
     'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
     'geo blocker': 'SKIP',
+    // Freelance-ops kebab/snake/space variants → Title Case canonical
+    'in-progress': 'In Progress', 'in_progress': 'In Progress', 'inprogress': 'In Progress', 'wip': 'In Progress',
+    'qual': 'Qualified', 'qualed': 'Qualified',
   };
 
   if (aliases[lower]) return aliases[lower];
