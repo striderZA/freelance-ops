@@ -34,13 +34,13 @@
     "automation"
   ],
   "author": "Jaco du Preez <jaco.dupreez7@gmail.com>",
-  "homepage": "https://github.com/jacodupreez/freelance-ops",
+  "homepage": "https://github.com/striderZA/freelance-ops",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jacodupreez/freelance-ops"
+    "url": "https://github.com/striderZA/freelance-ops"
   },
   "bugs": {
-    "url": "https://github.com/jacodupreez/freelance-ops/issues"
+    "url": "https://github.com/striderZA/freelance-ops/issues"
   },
   "license": "MIT",
   "dependencies": {

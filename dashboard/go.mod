@@ -1,4 +1,4 @@
-module github.com/santifer/freelance-ops/dashboard
+module github.com/striderZA/freelance-ops/dashboard
 
 go 1.24.2
 

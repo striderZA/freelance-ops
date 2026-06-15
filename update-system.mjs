@@ -23,9 +23,9 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 
-const CANONICAL_REPO = 'https://github.com/santifer/freelance-ops.git';
-const RAW_VERSION_URL = 'https://raw.githubusercontent.com/santifer/freelance-ops/main/VERSION';
-const RELEASES_API = 'https://api.github.com/repos/santifer/freelance-ops/releases/latest';
+const CANONICAL_REPO = 'https://github.com/striderZA/freelance-ops.git';
+const RAW_VERSION_URL = 'https://raw.githubusercontent.com/striderZA/freelance-ops/main/VERSION';
+const RELEASES_API = 'https://api.github.com/repos/striderZA/freelance-ops/releases/latest';
 
 // Matches a semver, with or without a leading `v` and an optional
 // Release Please component prefix (e.g. `freelance-ops-v1.9.0` → `1.9.0`).
