@@ -1,0 +1,27 @@
+# freelance-ops Rate Configuration
+# Copy this file to config/rates.yml and fill in your numbers.
+# doctor.mjs treats rates.yml as required user data; never commit your copy.
+
+# Hourly rate floor (the minimum you will accept on a 1-hour consulting call,
+# a small bug fix, or a one-off task). Anything below this is a hard no.
+rate_floor: $50/hr
+
+# Day rate (8 hours). Used for project quoting and short engagements.
+day_rate: $400/day
+
+# Target bands for typical engagements. doctor / scoring modes use these
+# to flag offers that fall well below market for your role and region.
+target_bands:
+  short_engagement: $500-$1500   # 1-2 weeks
+  mid_engagement: $3000-$8000    # 1-2 months
+  long_engagement: $10000-$30000 # 3+ months or retainer
+
+# Annualized income floor for full-time / contract-to-hire roles.
+# Used by the scoring system when a JD posts a salary range.
+annual_floor: $120000
+
+# Hard limits — leads that violate these are auto-discarded.
+limits:
+  min_hourly: $40
+  max_discount_pct: 15   # never discount more than this without a clear reason
+  unpaid_trial: false    # set true only if you're explicitly open to this

@@ -1969,26 +1969,34 @@ try {
 console.log('\n12. Cold-start trigger (deterministic onboarding state)');
 
 try {
-  // Virgin env: none of the 4 user-layer prerequisites present → must onboard.
+  // Virgin env: none of the user-layer prerequisites present → must onboard.
   const virgin = mkdtempSync(join(tmpdir(), 'co-cold-'));
   const v = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', virgin]) || '{}');
   if (
     v.onboardingNeeded === true &&
     Array.isArray(v.missing) &&
-    v.missing.length === 4 &&
+    v.missing.length === 6 &&
     Array.isArray(v.warnings)
   ) {
-    pass('Virgin env → onboarding triggered (4 prerequisites missing)');
+    pass('Virgin env → onboarding triggered (6 prerequisites missing)');
   } else {
     fail(`Virgin env not flagged for onboarding: ${JSON.stringify(v)}`);
   }
   rmSync(virgin, { recursive: true, force: true });
 
-  // Fully provisioned env: all 4 present → must NOT onboard.
+  // Fully provisioned env: all 6 present → must NOT onboard.
   const ready = mkdtempSync(join(tmpdir(), 'co-ready-'));
   mkdirSync(join(ready, 'config'), { recursive: true });
   mkdirSync(join(ready, 'modes'), { recursive: true });
-  for (const f of ['cv.md', 'config/profile.yml', 'modes/_profile.md', 'portals.yml']) {
+  mkdirSync(join(ready, 'data'), { recursive: true });
+  for (const f of [
+    'profile.md',
+    'config/profile.yml',
+    'config/rates.yml',
+    'config/platforms.yml',
+    'modes/_profile.md',
+    'data/leads.md',
+  ]) {
     writeFileSync(join(ready, f), 'x');
   }
   const r = JSON.parse(run(NODE, ['doctor.mjs', '--json', '--target', ready]) || '{}');

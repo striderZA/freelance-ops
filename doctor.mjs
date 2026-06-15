@@ -108,16 +108,23 @@ function checkPlaywrightMcp(root) {
   };
 }
 
-// Single source of truth for the four user-layer prerequisites (the list
+// Single source of truth for the user-layer prerequisites (the list
 // AGENTS.md "First Run" documents). BOTH the human checklist (`checkPrereq`)
 // and the machine-readable cold-start state (`onboardingState`) derive from
 // THIS array, so they cannot drift. Paths use "/" and are split for join().
+//
+// The freelance-ops schema has 5 required user-data files. The legacy
+// career-ops schema (cv.md at the project root, portals.yml at the root,
+// data/applications.md) is supported as a fallback so users upgrading from
+// a pre-freelance-ops checkout keep working until they finish migrating.
 const USER_LAYER_PREREQS = [
   {
-    path: 'cv.md',
+    path: 'profile.md',
+    legacyPaths: ['cv.md'],
     fix: [
-      'Create cv.md in the project root with your CV in markdown',
-      'See examples/ for reference CVs',
+      'Create profile.md in the project root with your profile in markdown',
+      '(cv.md is still accepted as a legacy alias)',
+      'See examples/ for reference profiles',
     ],
   },
   {
@@ -128,27 +135,48 @@ const USER_LAYER_PREREQS = [
     ],
   },
   {
-    path: 'modes/_profile.md',
+    path: 'config/rates.yml',
     fix: [
-      'Run: cp modes/_profile.template.md modes/_profile.md',
-      'Then customize your archetypes / targeting narrative',
+      'Create config/rates.yml with your rate floor and target bands',
+      'See config/rates.example.yml for the schema',
     ],
   },
   {
-    path: 'portals.yml',
+    path: 'config/platforms.yml',
+    legacyPaths: ['portals.yml'],
     fix: [
-      'Run: cp templates/portals.example.yml portals.yml',
-      'Then customize with your target companies',
+      'Run: cp config/platforms.example.yml config/platforms.yml',
+      'Then customize with your target platforms',
+      '(portals.yml at the project root is still accepted as a legacy alias)',
+    ],
+  },
+  {
+    path: 'modes/_profile.md',
+    fix: [
+      'Run: cp modes/_profile.template.md modes/_profile.md',
+      'Then customize your niches / targeting narrative',
+    ],
+  },
+  {
+    path: 'data/leads.md',
+    legacyPaths: ['data/applications.md'],
+    fix: [
+      'Create data/leads.md as your freelance pipeline tracker',
+      '(data/applications.md is still accepted as a legacy alias)',
     ],
   },
 ];
 
-function prereqPresent(root, path) {
-  return existsSync(join(root, ...path.split('/')));
+function prereqPresent(root, path, legacyPaths = []) {
+  if (existsSync(join(root, ...path.split('/')))) return true;
+  for (const legacy of legacyPaths) {
+    if (existsSync(join(root, ...legacy.split('/')))) return true;
+  }
+  return false;
 }
 
-function checkPrereq({ path, fix }) {
-  if (prereqPresent(projectRoot, path)) {
+function checkPrereq({ path, legacyPaths = [], fix }) {
+  if (prereqPresent(projectRoot, path, legacyPaths)) {
     return { pass: true, label: `${path} found` };
   }
   return { pass: false, label: `${path} not found`, fix };
@@ -250,13 +278,13 @@ async function main() {
   }
 }
 
-// Single source of truth for the cold-start state: the same four user-layer
+// Single source of truth for the cold-start state: the same user-layer
 // prerequisites that AGENTS.md "First Run" lists. `--json` turns the trigger into
 // a deterministic mechanism the agent runs (instead of re-deriving it from prose),
 // and `--target <dir>` lets the test suite point it at a simulated virgin env.
 function onboardingState(root) {
   const missing = USER_LAYER_PREREQS
-    .filter(({ path }) => !prereqPresent(root, path))
+    .filter(({ path, legacyPaths }) => !prereqPresent(root, path, legacyPaths))
     .map(({ path }) => path);
   const warnings = playwrightMcpConfigured(root) ? [] : [PLAYWRIGHT_MCP_WARNING];
   return { onboardingNeeded: missing.length > 0, missing, warnings };

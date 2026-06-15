@@ -1,7 +1,9 @@
 # Personal data (user fills these)
 cv.md
+profile.md
 data/applications.md
 data/applications.db
+data/leads.md
 data/pipeline.md
 data/scan-history.tsv
 data/parser-output/**/*.json
@@ -31,6 +33,8 @@ writing-samples/*
 
 # User config and customization (never auto-updated)
 config/profile.yml
+config/rates.yml
+config/platforms.yml
 portals.yml
 modes/_profile.md
 .update-dismissed
