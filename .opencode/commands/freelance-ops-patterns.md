@@ -1,13 +1,7 @@
-# /freelance-ops-patterns (STUB)
+# /freelance-ops-patterns
 
-**Status:** STUB - command shell only. Mode content authored in Plan 2.
+**Description:** Win/loss pattern analysis for your freelance pipeline
 
-This command is wired up so that the CLI recognizes it. When run, it should
-delegate to the corresponding mode file:
+**Usage:** `/freelance-ops-patterns [--all --since <date> --company <name>]`
 
-  Read and execute modes/patterns.md
-
-For Plan 2+ (the content phase), each command will be fully implemented with:
-- Description and arguments
-- Invokes the right mode file
-- Handles the auto-detect case (no args -> show menu, with URL -> scan, with text -> lead)
+Read and execute `modes/patterns.md` with the user's argument.

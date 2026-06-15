@@ -1,13 +1,7 @@
-# /freelance-ops-portfolio (STUB)
+# /freelance-ops-portfolio
 
-**Status:** STUB - command shell only. Mode content authored in Plan 2.
+**Description:** Generate or update your freelance rate card and portfolio case studies
 
-This command is wired up so that the CLI recognizes it. When run, it should
-delegate to the corresponding mode file:
+**Usage:** `/freelance-ops-portfolio [rate-card | case-study <slug> | list]`
 
-  Read and execute modes/portfolio.md
-
-For Plan 2+ (the content phase), each command will be fully implemented with:
-- Description and arguments
-- Invokes the right mode file
-- Handles the auto-detect case (no args -> show menu, with URL -> scan, with text -> lead)
+Read and execute `modes/portfolio.md` with the user's argument.

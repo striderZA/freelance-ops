@@ -1,13 +1,7 @@
-# /freelance-ops-pipeline (STUB)
+# /freelance-ops-pipeline
 
-**Status:** STUB - command shell only. Mode content authored in Plan 2.
+**Description:** Process all pending URLs from the pipeline inbox (batch evaluation)
 
-This command is wired up so that the CLI recognizes it. When run, it should
-delegate to the corresponding mode file:
+**Usage:** `/freelance-ops-pipeline`
 
-  Read and execute modes/pipeline.md
-
-For Plan 2+ (the content phase), each command will be fully implemented with:
-- Description and arguments
-- Invokes the right mode file
-- Handles the auto-detect case (no args -> show menu, with URL -> scan, with text -> lead)
+Read and execute `modes/pipeline.md` with the user's argument.

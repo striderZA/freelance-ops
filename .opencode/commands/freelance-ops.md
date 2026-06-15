@@ -1,13 +1,7 @@
-# /freelance-ops (STUB)
+# /freelance-ops
 
-**Status:** STUB - command shell only. Mode content authored in Plan 2.
+**Description:** Main dispatcher - show all freelance-ops commands or auto-detect from input
 
-This command is wired up so that the CLI recognizes it. When run, it should
-delegate to the corresponding mode file:
+**Usage:** `/freelance-ops [URL or text or command]`
 
-  Read and execute modes/menu.md
-
-For Plan 2+ (the content phase), each command will be fully implemented with:
-- Description and arguments
-- Invokes the right mode file
-- Handles the auto-detect case (no args -> show menu, with URL -> scan, with text -> lead)
+With no arguments, shows the complete command menu. With a URL or pasted text, auto-detects and dispatches to the right mode.

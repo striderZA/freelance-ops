@@ -1,13 +1,7 @@
-# /freelance-ops-auto (STUB)
+# /freelance-ops-auto
 
-**Status:** STUB - command shell only. Mode content authored in Plan 2.
+**Description:** Auto-detect and dispatch to the right mode based on user input
 
-This command is wired up so that the CLI recognizes it. When run, it should
-delegate to the corresponding mode file:
+**Usage:** `/freelance-ops-auto [URL, JD text, command keyword, or paste from anywhere]`
 
-  Read and execute modes/auto.md
-
-For Plan 2+ (the content phase), each command will be fully implemented with:
-- Description and arguments
-- Invokes the right mode file
-- Handles the auto-detect case (no args -> show menu, with URL -> scan, with text -> lead)
+Read and execute `modes/auto-pipeline.md` with the user's argument.

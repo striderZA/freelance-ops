@@ -4,7 +4,7 @@ description: AI freelance pipeline command center -- evaluate leads, draft propo
 arguments: mode
 user_invocable: true
 user-invocable: true
-argument-hint: "[scan | deep | pdf | latex | cover | lead | leads | proposal | pitch | outreach | screening | nurture | portfolio | apply | batch | tracker | pipeline | training | project | onboarding | patterns | followup | update]"
+argument-hint: "[scan | deep | pdf | latex | cover | lead | leads | proposal | pitch | outreach | screening | nurture | portfolio | apply | batch | tracker | pipeline | training | project | onboarding | patterns | followup | update | auto-pipeline]"
 license: MIT
 ---
 
@@ -57,33 +57,51 @@ Show this menu:
 freelance-ops -- Command Center
 
 Available commands:
-  /freelance-ops {lead}            → AUTO-PIPELINE: evaluate + proposal + tracker (paste text or URL)
-  /freelance-ops lead              → Evaluate a single lead (Blocks A-F + G legitimacy)
-  /freelance-ops leads             → Compare and rank multiple leads
-  /freelance-ops proposal          → Draft a tailored proposal for a qualified lead
-  /freelance-ops pitch             → Short pitch / opener (DM, cold email, intro)
-  /freelance-ops outreach          → LinkedIn / cold outreach: find contacts + draft message
-  /freelance-ops screening         → Screen a client: payment history, scam signals
-  /freelance-ops nurture           → Re-engage past leads / warm the pipeline
-  /freelance-ops portfolio         → Review a portfolio piece against your niches
+  /freelance-ops {lead}            → AUTO-PIPELINE: auto-detect input and route to the right mode
+  /freelance-ops lead              → Evaluate a freelance lead (paste a URL or JD text)
+  /freelance-ops leads             → Compare and rank multiple freelance leads
+  /freelance-ops proposal          → Generate a tailored proposal from an evaluated lead
+  /freelance-ops portfolio         → Generate or update your rate card and portfolio case studies
+  /freelance-ops pitch             → Submit a proposal on a freelance platform
+  /freelance-ops screening         → Prepare for a client screening call
+  /freelance-ops nurture           → Follow up on leads awaiting response
+  /freelance-ops outreach          → Cold outreach to potential direct clients
+  /freelance-ops pipeline          → Process pending URLs from the inbox
+  /freelance-ops deep              → Deep client or company research
   /freelance-ops interview-prep    → Generate client-specific kickoff / screening prep doc
-  /freelance-ops onboarding        → Interactive onboarding interview (niches, rate card, proof points)
+  /freelance-ops onboarding        → Interactive onboarding interview
   /freelance-ops pdf               → PDF only, ATS-optimized profile / CV
   /freelance-ops latex             → Export profile as LaTeX/Overleaf .tex
   /freelance-ops cover             → Cover letter: standalone scope paste or /freelance-ops cover {slug}
-  /freelance-ops training          → Evaluate course / cert against your niches
+  /freelance-ops training          → Evaluate a course or certification
   /freelance-ops project           → Evaluate a portfolio project idea
-  /freelance-ops tracker           → Lead pipeline status overview
+  /freelance-ops tracker           → View and update the lead tracker
   /freelance-ops apply             → Live application / proposal assistant (reads form + generates answers)
-  /freelance-ops scan              → Scan platforms and discover new leads
+  /freelance-ops scan              → Scan platforms for new freelance leads
   /freelance-ops batch             → Batch processing with parallel workers
-  /freelance-ops patterns          → Analyze rejection / ghost patterns and improve targeting
+  /freelance-ops patterns          → Analyze win/loss patterns across your leads
   /freelance-ops followup          → Follow-up cadence tracker: flag overdue, generate drafts
   /freelance-ops update            → Update freelance-ops system files with diff preview + compat check
 
 Inbox: add URLs to data/pipeline.md → /freelance-ops pipeline
 Or paste a lead description directly to run the full pipeline.
 ```
+
+---
+
+## Onboarding
+
+When the user invokes `onboarding` mode (or if onboarding has never been completed), execute `modes/onboarding.md`. This conducts an interactive interview to capture:
+
+- Target niche and specialization
+- Rate card (hourly, fixed, retainer)
+- Proof points and portfolio highlights
+- Preferred platforms and client types
+- Deal-breakers and red flags
+
+The results are stored in `config/profile.yml`, `modes/_profile.md`, and optionally `article-digest.md`. Do not edit `modes/_shared.md` with user-specific content.
+
+See `modes/onboarding.md` for the full interview flow.
 
 ---
 
