@@ -11,6 +11,8 @@
  *   node test-all.mjs --quick   # Skip dashboard build (faster)
  */
 
+// TODO Task 32: add states.test.mjs to the test runner
+
 import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
 import { join, dirname } from 'path';
