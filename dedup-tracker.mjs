@@ -219,19 +219,19 @@ function roleMatch(a, b) {
   // permissive — but identical text is unambiguous and should dedup.
   const aRole = String(a.role ?? '').trim().toLowerCase();
   const bRole = String(b.role ?? '').trim().toLowerCase();
-  if (aRole && aRole === bRole) return true;
-  if (!roleFuzzyMatch(a.role, b.role)) return false;
+  const exactMatch = !!(aRole && aRole === bRole);
+  if (!exactMatch && !roleFuzzyMatch(a.role, b.role)) return false;
 
-  // Fuzzy title matches are intentionally conservative once either row has
-  // entered the real application pipeline. A user may already have applied to
-  // one sibling role, so deleting that row because a higher-scored sibling has
-  // similar wording would lose status, report, and notes. Keep both unless the
-  // rows point to the exact same report identity.
+  // Both exact and fuzzy role matches need advanced-status protection. A user
+  // may already have applied to one sibling role, so deleting that row because
+  // a higher-scored sibling has the same or similar wording would lose status,
+  // report, and notes. Keep both unless the rows point to the exact same
+  // report identity.
   if (isAdvancedStatus(a.status) || isAdvancedStatus(b.status)) {
     const key = pairKey(a, b);
     if (!protectedFuzzyPairs.has(key)) {
       protectedFuzzyPairs.add(key);
-      console.warn(`⚠️  Keep #${a.num} and #${b.num}: fuzzy role match but advanced status requires exact report identity`);
+      console.warn(`⚠️  Keep #${a.num} and #${b.num}: role match but advanced status requires exact report identity`);
     }
     return false;
   }
