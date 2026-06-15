@@ -6,23 +6,23 @@ This document defines which files belong to the **system** (auto-updatable) and 
 
 These files contain your personal data, customizations, and work product. Updates will NEVER modify them.
 
-| File | Purpose |
-|------|---------|
-| `cv.md` | Your CV in markdown |
-| `config/profile.yml` | Your identity, targets, comp range |
-| `modes/_profile.md` | Your archetypes, narrative, negotiation scripts |
-| `article-digest.md` | Your proof points from portfolio |
-| `interview-prep/story-bank.md` | Your accumulated STAR+R stories |
-| `portals.yml` | Your customized company list |
-| `data/applications.md` | Your application tracker (source of truth) |
-| `data/applications.db` | Derived query index over `applications.md` (SQLite, rebuilt by `node tracker.mjs sync` — safe to delete) |
-| `data/pipeline.md` | Your URL inbox |
-| `data/scan-history.tsv` | Your scan history |
-| `data/follow-ups.md` | Your follow-up history |
-| `writing-samples/*` | Your personal writing samples for style calibration (except `writing-samples/README.md`, which is system-owned documentation delivered by updates) |
-| `reports/*` | Your evaluation reports |
-| `output/*` | Your generated PDFs |
-| `jds/*` | Your saved job descriptions |
+**User Layer (NEVER auto-updated, personalization goes HERE):**
+- `profile.md` (renamed from `cv.md`)
+- `config/profile.yml`
+- `config/rates.yml`
+- `config/platforms.yml`
+- `modes/_profile.md`
+- `data/leads.md` (was `applications.md`)
+- `data/clients.yml`
+- `data/portfolio/`
+- `data/contracts/`
+- `data/invoices/`
+- `data/pipeline.md`
+- `data/scan-history.tsv`
+- `portals.yml` → `config/platforms.yml`
+- `reports/*`
+- `output/*`
+- `interview-prep/` → repurposed for screening (Plan 2)
 
 ## System Layer (safe to auto-update)
 
@@ -46,6 +46,16 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `modes/training.md` | Training evaluation instructions |
 | `modes/patterns.md` | Pattern analysis instructions |
 | `modes/followup.md` | Follow-up cadence instructions |
+| `modes/blocks/lead-blocks.md` | Lead block templates |
+| `modes/lead.md` | Single lead evaluation instructions |
+| `modes/leads.md` | Compare multiple leads |
+| `modes/proposal.md` | Proposal drafting instructions |
+| `modes/portfolio.md` | Portfolio review instructions |
+| `modes/pitch.md` | Pitch drafting instructions |
+| `modes/screening.md` | Client screening instructions |
+| `modes/nurture.md` | Lead nurturing instructions |
+| `modes/outreach.md` | Outreach drafting instructions |
+| `modes/onboarding.md` | Onboarding instructions |
 | `modes/de/*` | German language modes |
 | `modes/fr/*` | French language modes |
 | `modes/ja/*` | Japanese language modes |
