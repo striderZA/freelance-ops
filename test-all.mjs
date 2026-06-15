@@ -2562,6 +2562,98 @@ try {
   fail(`update-system SEMVER_RE test crashed: ${e.message}`);
 }
 
+// ── 17. STRUCTURAL CHECKS — freelance-ops ───────────────────────
+//
+// Plan 1 added new user/data files (data/leads.md, data/clients.yml,
+// templates/states.yml, modes/blocks/lead-blocks.md, NOTICE) and CLI skill
+// folders (.claude/.opencode/.gemini/.qwen/.agents/skills/freelance-ops), while
+// removing legacy career-ops artifacts (modes/latex.md, providers/*.mjs,
+// scan-ats-full.mjs, test-salary-filter.mjs, templates/cv-template.*). This
+// section guards both directions: a regression in either set breaks CI before
+// merge, so a refactor that resurrects an old file or drops a new one can't
+// reach main.
+
+console.log('\n17. Structural checks — freelance-ops');
+
+// Removed FTE files — must NOT exist.
+const removedFteFiles = [
+  'modes/latex.md',
+  'providers/greenhouse.mjs',
+  'providers/ashby.mjs',
+  'providers/lever.mjs',
+  'providers/workable.mjs',
+  'providers/workday.mjs',
+  'providers/recruitee.mjs',
+  'providers/smartrecruiters.mjs',
+  'providers/solidjobs.mjs',
+  'scan-ats-full.mjs',
+  'test-salary-filter.mjs',
+  'templates/cv-template.html',
+  'templates/cv-template.tex',
+];
+for (const f of removedFteFiles) {
+  if (!fileExists(f)) pass(`Removed file stays gone: ${f}`);
+  else fail(`Removed file resurrected: ${f}`);
+}
+
+// New required files — must exist.
+const newRequiredFiles = [
+  'data/leads.md',
+  'data/clients.yml',
+  'templates/states.yml',
+  'modes/blocks/lead-blocks.md',
+  'NOTICE',
+];
+for (const f of newRequiredFiles) {
+  if (fileExists(f)) pass(`Required file present: ${f}`);
+  else fail(`Required file missing: ${f}`);
+}
+
+// 17 freelance mode stubs — every CLI command and modes/_shared.md reference
+// resolves to a real file. The existing expectedModes list above covers the
+// legacy FTE subset; the freelance-only set is checked here.
+const freelanceModeStubs = [
+  'lead', 'leads', 'proposal', 'portfolio', 'pitch', 'screening',
+  'nurture', 'outreach', 'pipeline', 'scan', 'tracker',
+  'auto-pipeline', 'patterns', 'onboarding', 'deep', 'training', 'project',
+];
+for (const m of freelanceModeStubs) {
+  if (fileExists(`modes/${m}.md`)) pass(`Freelance mode stub present: modes/${m}.md`);
+  else fail(`Freelance mode stub missing: modes/${m}.md`);
+}
+
+// 5 CLI skill folders — Claude / OpenCode / Gemini / Qwen / agents.
+const cliSkillPaths = [
+  '.claude/skills/freelance-ops/SKILL.md',
+  '.opencode/skills/freelance-ops/SKILL.md',
+  '.gemini/skills/freelance-ops/SKILL.md',
+  '.qwen/skills/freelance-ops/SKILL.md',
+  '.agents/skills/freelance-ops/SKILL.md',
+];
+for (const p of cliSkillPaths) {
+  if (fileExists(p)) pass(`CLI skill present: ${p}`);
+  else fail(`CLI skill missing: ${p}`);
+}
+
+// Sample CLI commands — one canonical + one sub-command per CLI is enough
+// to catch a wholesale rename or directory move. The full 18×4 = 72 file
+// inventory is exercised by the contributor loop and the agent skills, not
+// the test runner.
+const sampleCommands = [
+  '.claude/commands/freelance-ops.md',
+  '.claude/commands/freelance-ops-lead.md',
+  '.opencode/commands/freelance-ops.md',
+  '.opencode/commands/freelance-ops-lead.md',
+  '.gemini/commands/freelance-ops.toml',
+  '.gemini/commands/freelance-ops-lead.toml',
+  '.qwen/commands/freelance-ops.toml',
+  '.qwen/commands/freelance-ops-lead.toml',
+];
+for (const p of sampleCommands) {
+  if (fileExists(p)) pass(`CLI command present: ${p}`);
+  else fail(`CLI command missing: ${p}`);
+}
+
 // ── SUMMARY ─────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(50));

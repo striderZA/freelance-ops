@@ -16,4 +16,7 @@ jobs:
         with:
           go-version: '1.26'
       - run: npm install
-      - run: node test-all.mjs --quick
+      - name: Run unit tests
+        run: node --test tests/*.test.mjs
+      - name: Run full test suite
+        run: node test-all.mjs --quick
