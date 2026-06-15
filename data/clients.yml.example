@@ -1,0 +1,22 @@
+# Freelance-Ops client registry
+# Tracks repeat clients, payment history, and ratings across engagements.
+# One entry per client (or company for B2B contracts).
+
+clients: []
+
+# Schema (per client):
+# - name: string                          # Client or company name
+#   platform: string                      # Upwork | Direct | Referral | ...
+#   contact_email: string                 # Optional
+#   first_seen: YYYY-MM-DD
+#   last_seen: YYYY-MM-DD
+#   engagements:                          # List of past engagements
+#     - slug: string                      # Slug used in reports
+#       date: YYYY-MM-DD
+#       scope: string
+#       rate: string                      # e.g. "$95/hr" or "$4500 fixed"
+#       outcome: Paid | Disputed | Withdrew
+#       rating: 1-5                       # Your rating of the client
+#       payment_on_time: bool
+#       would_work_again: bool
+#   notes: string                         # Free-form
