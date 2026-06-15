@@ -321,28 +321,28 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
 
-### TSV Format for Tracker Additions
+### TSV Format for Tracker Additions (Freelance-Ops)
 
-Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{client-slug}.tsv`. Single line, 10 tab-separated columns:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{client_or_company}\t{role_or_scope}\t{platform}\t{status}\t{rate}\t{score}/5\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
-**Column order (IMPORTANT -- status BEFORE score):**
+**Column order (IMPORTANT -- status BEFORE score, platform + rate inserted):**
 1. `num` -- sequential number (integer)
 2. `date` -- YYYY-MM-DD
-3. `company` -- short company name
-4. `role` -- job title
-5. `status` -- canonical status (e.g., `Evaluated`)
-6. `score` -- format `X.X/5` (e.g., `4.2/5`)
-7. `pdf` -- `✅` or `❌`
-8. `report` -- markdown link, always written **root-relative**: `[num](reports/...)`
-9. `notes` -- one-line summary
+3. `client_or_company` -- short name
+4. `role_or_scope` -- short scope description
+5. `platform` -- Upwork | Direct | Referral | Toptal | Contra | Other
+6. `status` -- canonical (see `templates/states.yml`)
+7. `rate` -- e.g. `$95/hr` or `$4500 fixed` (empty if not yet proposed)
+8. `score` -- format `X.X/5` (e.g., `4.2/5`)
+9. `report` -- markdown link, root-relative `[num](reports/...)`
+10. `notes` -- one-line summary
 
-**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
-
-**Report link normalization:** The TSV always carries a **root-relative** `[num](reports/...)` link. `merge-tracker.mjs` rewrites it so the link is relative to the tracker file's own directory before writing it into the tracker — `../reports/...` when the tracker is at `data/applications.md`, or `reports/...` at the root layout. This keeps links clickable from the tracker (markdown links resolve relative to the file that contains them). Normalization is idempotent. To fix links in an existing tracker, run `node merge-tracker.mjs --migrate` (see #760).
+**Note:** In `leads.md`, the column order is: # | Date | Client/Company | Role/Scope | Platform | Status | Rate | Score | Report | Notes.
+The merge script handles the column swap automatically.
 
 ### Pipeline Integrity
 
