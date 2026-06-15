@@ -24,11 +24,15 @@ import { normalizeReportLink as normalizeLink } from './tracker-links.mjs';
 import { roleFuzzyMatch } from './role-matcher.mjs';
 
 const freelance_ops = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original).
+// Support all three layouts: data/leads.md (current freelance-ops default),
+// data/applications.md (boilerplate), and applications.md (legacy). Lookup
+// order is newest → oldest so a fresh setup lands on the new schema.
 // freelance_ops_TRACKER overrides the path (used by tests and non-standard layouts).
 const APPS_FILE_RAW = process.env.freelance_ops_TRACKER
   ? process.env.freelance_ops_TRACKER
-  : existsSync(join(freelance_ops, 'data/applications.md'))
+  : existsSync(join(freelance_ops, 'data/leads.md'))
+    ? join(freelance_ops, 'data/leads.md')
+    : existsSync(join(freelance_ops, 'data/applications.md'))
     ? join(freelance_ops, 'data/applications.md')
     : join(freelance_ops, 'applications.md');
 const APPS_FILE = canonicalizeTrackerPath(APPS_FILE_RAW);
@@ -421,18 +425,25 @@ function parseScore(s) {
   return m ? parseFloat(m[1]) : 0;
 }
 
-// Column layout for the applications.md table. The tracker may use the original
-// 9-column layout, or a customized one with an extra/reordered column (e.g. a
-// Location column after Role). We map columns by header NAME rather than fixed
-// position so both work — fixed-position indexing would otherwise read, say,
-// Location where it expects Score. Falls back to the legacy layout when no
-// recognizable header row is found.
+// Column layout for the tracker table. The tracker may use the 10-column
+// freelance-ops schema (Client/Company, Role/Scope, Platform, Status, Rate,
+// Score, Report, Notes) or the 9-column legacy layout (Company, Role, Score,
+// Status, PDF, Report, Notes). The freelance-ops schema also uses header names
+// "Client/Company" and "Role/Scope" instead of the legacy "Company" / "Role".
+// We map columns by header NAME rather than fixed position so both work —
+// fixed-position indexing would otherwise read, say, Location where it expects
+// Score. Falls back to the legacy layout when no recognizable header row is
+// found.
 const LEGACY_COLMAP = { num: 1, date: 2, company: 3, role: 4, score: 5, status: 6, pdf: 7, report: 8, notes: 9 };
+const FREELANCE_COLMAP = { num: 1, date: 2, clientOrCompany: 3, roleOrScope: 4, platform: 5, status: 6, rate: 7, score: 8, report: 9, notes: 10 };
 let COLMAP = LEGACY_COLMAP;
 
 const HEADER_ALIASES = {
-  '#': 'num', 'num': 'num', 'date': 'date', 'company': 'company', 'empresa': 'company',
-  'role': 'role', 'puesto': 'role', 'location': 'location', 'score': 'score',
+  '#': 'num', 'num': 'num', 'date': 'date',
+  'company': 'company', 'client/company': 'clientOrCompany', 'client': 'clientOrCompany', 'empresa': 'clientOrCompany',
+  'role': 'role', 'role/scope': 'roleOrScope', 'scope': 'roleOrScope', 'puesto': 'roleOrScope',
+  'location': 'location', 'platform': 'platform',
+  'score': 'score', 'rate': 'rate',
   'status': 'status', 'pdf': 'pdf', 'report': 'report', 'notes': 'notes',
 };
 
@@ -445,21 +456,26 @@ function detectColumns(lines) {
   for (const line of lines) {
     if (!line.startsWith('|')) continue;
     const cells = line.split('|').map(s => s.trim().toLowerCase());
-    if (!cells.includes('company') || !cells.includes('role')) continue;
+    if (!cells.includes('client/company') && !cells.includes('company') && !cells.includes('client')) continue;
+    if (!cells.includes('role/scope') && !cells.includes('role')) continue;
     const map = {};
     cells.forEach((c, i) => { if (HEADER_ALIASES[c] != null) map[HEADER_ALIASES[c]] = i; });
-    if (['num', 'company', 'role', 'score', 'status'].every(k => map[k] != null)) return map;
+    if (map['num'] != null && map['clientOrCompany'] != null && map['roleOrScope'] != null && map['status'] != null) return map;
   }
   return null;
 }
 
-// Build a tracker row string matching the detected layout (with or without the
-// optional Location column) so writes round-trip through the same schema.
+// Build a tracker row string matching the detected layout (10-column freelance
+// schema or 9-column legacy with optional Location column) so writes round-trip
+// through the same schema.
 function buildRow(o) {
-  if (COLMAP.location != null) {
-    return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.location || '—'} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+  if (COLMAP === FREELANCE_COLMAP || COLMAP.clientOrCompany != null) {
+    return `| ${o.num} | ${o.date} | ${o.clientOrCompany ?? o.company} | ${o.roleOrScope ?? o.role} | ${o.platform ?? ''} | ${o.status} | ${o.rate ?? ''} | ${o.score} | ${o.report} | ${o.notes} |`;
   }
-  return `| ${o.num} | ${o.date} | ${o.company} | ${o.role} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+  if (COLMAP.location != null) {
+    return `| ${o.num} | ${o.date} | ${o.clientOrCompany ?? o.company} | ${o.roleOrScope ?? o.role} | ${o.location || '—'} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
+  }
+  return `| ${o.num} | ${o.date} | ${o.clientOrCompany ?? o.company} | ${o.roleOrScope ?? o.role} | ${o.score} | ${o.status} | ${o.pdf} | ${o.report} | ${o.notes} |`;
 }
 
 /**
@@ -478,15 +494,22 @@ function parseAppLine(line) {
   if (parts.length <= maxIdx) return null;
   const num = parseInt(parts[COLMAP.num]);
   if (isNaN(num) || num === 0) return null;
+  const isFreelance = COLMAP.clientOrCompany != null;
+  const companyKey = isFreelance ? 'clientOrCompany' : 'company';
+  const roleKey = isFreelance ? 'roleOrScope' : 'role';
   return {
     num,
     date: parts[COLMAP.date],
-    company: parts[COLMAP.company],
-    role: parts[COLMAP.role],
+    [companyKey]: parts[COLMAP[companyKey]],
+    [roleKey]: parts[COLMAP[roleKey]],
+    company: parts[COLMAP[companyKey]],
+    role: parts[COLMAP[roleKey]],
+    platform: COLMAP.platform != null ? parts[COLMAP.platform] : '',
+    rate: COLMAP.rate != null ? parts[COLMAP.rate] : '',
     location: COLMAP.location != null ? parts[COLMAP.location] : '',
     score: parts[COLMAP.score],
     status: parts[COLMAP.status],
-    pdf: parts[COLMAP.pdf],
+    pdf: COLMAP.pdf != null ? parts[COLMAP.pdf] : '',
     report: parts[COLMAP.report],
     notes: COLMAP.notes != null ? (parts[COLMAP.notes] || '') : '',
     raw: line,
@@ -519,18 +542,21 @@ function parseTsvContent(content, filename) {
       console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
     }
-    // Format: num | date | company | role | score | status | pdf | report | notes [| location]
+    // Format: num | date | client/company | role/scope | platform | status | rate | score | report | notes
     addition = {
       num: parseInt(parts[0]),
       date: parts[1],
+      clientOrCompany: parts[2],
       company: parts[2],
+      roleOrScope: parts[3],
       role: parts[3],
-      score: parts[4],
+      platform: (parts[4] || '').trim(),
       status: validateStatus(parts[5]),
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-      location: (parts[9] || '').trim(),
+      rate: (parts[6] || '').trim(),
+      score: parts[7],
+      report: parts[8],
+      notes: parts[9] || '',
+      location: '',
     };
   } else {
     // Tab-separated
@@ -540,43 +566,75 @@ function parseTsvContent(content, filename) {
       return null;
     }
 
-    // Detect column order: some TSVs have (status, score), others have (score, status)
-    // Heuristic: if col4 looks like a score and col5 looks like a status, they're swapped
+    // Detect column layout: the freelance-ops 10-column TSV has
+    //   num | date | client/company | role/scope | platform | status | rate | score | report | notes
+    // The legacy 9-column TSV has
+    //   num | date | company | role | status | score | pdf | report | notes
+    // The freelance layout inserts Platform and Rate columns around Status.
+    // Heuristic: if col4 looks like a free-form platform and col5 looks like a
+    // status, we're on the freelance schema. Otherwise fall through to the
+    // legacy score/status column-swap detection.
     const col4 = parts[4].trim();
     const col5 = parts[5].trim();
-    const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
-    const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
+    const col6 = parts[6].trim();
+    const freelanceLooksValid =
+      parts.length >= 10 &&
+      !/^\d+\.?\d*\/5$/.test(col5) &&
+      !/^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4) &&
+      /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor|qualified|proposed|negotiating|contracted|in progress|delivered|invoiced|paid|reviewed|ghosted|withdrew|disputed|in-progress|in_progress|inprogress|wip|working|qual|sent|submitted|negotiation|hired|signed|complete|completed|declined|no response|withdrawn)/i.test(col5) &&
+      // col6 should look like a rate ($/hr, USD, EUR) or be empty
+      (col6 === '' || /\$|\€|hr|usd|eur|£/i.test(col6));
 
-    let statusCol, scoreCol;
-    if (col4LooksLikeStatus && !col4LooksLikeScore) {
-      // Standard format: col4=status, col5=score
-      statusCol = col4; scoreCol = col5;
-    } else if (col4LooksLikeScore && col5LooksLikeStatus) {
-      // Swapped format: col4=score, col5=status
-      statusCol = col5; scoreCol = col4;
-    } else if (col5LooksLikeScore && !col4LooksLikeScore) {
-      // col5 is definitely score → col4 must be status
-      statusCol = col4; scoreCol = col5;
+    if (freelanceLooksValid) {
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        clientOrCompany: parts[2],
+        company: parts[2],
+        roleOrScope: parts[3],
+        role: parts[3],
+        platform: col4,
+        status: validateStatus(col5),
+        rate: col6,
+        score: parts[7],
+        report: parts[8],
+        notes: parts[9] || '',
+        location: '',
+      };
     } else {
-      // Default: standard format (status before score)
-      statusCol = col4; scoreCol = col5;
-    }
+      // Legacy 9-column TSV — same heuristic as before.
+      const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
+      const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
+      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
-    addition = {
-      num: parseInt(parts[0]),
-      date: parts[1],
-      company: parts[2],
-      role: parts[3],
-      status: validateStatus(statusCol),
-      score: scoreCol,
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-      // Optional trailing field: tab-separated TSVs may append a location.
-      location: (parts[9] || '').trim(),
-    };
+      let statusCol, scoreCol;
+      if (col4LooksLikeStatus && !col4LooksLikeScore) {
+        statusCol = col4; scoreCol = col5;
+      } else if (col4LooksLikeScore && col5LooksLikeStatus) {
+        statusCol = col5; scoreCol = col4;
+      } else if (col5LooksLikeScore && !col4LooksLikeScore) {
+        statusCol = col4; scoreCol = col5;
+      } else {
+        statusCol = col4; scoreCol = col5;
+      }
+
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        clientOrCompany: parts[2],
+        company: parts[2],
+        roleOrScope: parts[3],
+        role: parts[3],
+        platform: '',
+        status: validateStatus(statusCol),
+        rate: '',
+        score: scoreCol,
+        report: parts[7],
+        notes: parts[8] || '',
+        location: (parts[9] || '').trim(),
+      };
+    }
   }
 
   if (isNaN(addition.num) || addition.num === 0) {
@@ -725,7 +783,11 @@ for (const file of tsvFiles) {
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
         const updatedLine = buildRow({
-          num: duplicate.num, date: addition.date, company: addition.company, role: addition.role,
+          num: duplicate.num, date: addition.date,
+          clientOrCompany: addition.clientOrCompany || addition.company, roleOrScope: addition.roleOrScope || addition.role,
+          company: addition.company, role: addition.role,
+          platform: addition.platform || duplicate.platform || '',
+          rate: addition.rate || duplicate.rate || '',
           location: addition.location || duplicate.location || '—',
           score: addition.score, status: duplicate.status, pdf: duplicate.pdf,
           report: addition.report,
@@ -744,7 +806,11 @@ for (const file of tsvFiles) {
     if (addition.num > maxNum) maxNum = addition.num;
 
     const newLine = buildRow({
-      num: entryNum, date: addition.date, company: addition.company, role: addition.role,
+      num: entryNum, date: addition.date,
+      clientOrCompany: addition.clientOrCompany || addition.company, roleOrScope: addition.roleOrScope || addition.role,
+      company: addition.company, role: addition.role,
+      platform: addition.platform || '',
+      rate: addition.rate || '',
       location: addition.location || '—',
       score: addition.score, status: addition.status, pdf: addition.pdf,
       report: addition.report, notes: addition.notes,
