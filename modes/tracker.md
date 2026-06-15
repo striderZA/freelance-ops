@@ -1,29 +1,24 @@
-# Mode: tracker — Applications Tracker
+# Tracker Mode (STUB)
 
-Read and display `data/applications.md`.
+**Status:** STUB - content authored in Plan 2
+**See:** docs/superpowers/specs/2026-06-15-freelance-ops-fork-design.md
 
-**Tracker Format:**
+This mode is reserved. The full prompt and evaluation logic will be written
+when the freelance content phase begins.
 
-```markdown
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
-```
+For now, this file exists so that:
+- The state machine is fully wired
+- Slash command shells can resolve
+- CI structural tests pass
 
-Possible states: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
+The parent project's modes/ folder is the reference for the structure and
+depth of the final content. Each freelance mode will follow the same shape:
+  1. Purpose (one paragraph)
+  2. When to use
+  3. Inputs (what the user provides)
+  4. Output format
+  5. Workflow (step-by-step)
+  6. Edge cases
+  7. Examples
 
-- `Evaluated` = offer evaluated with report, pending decision
-- `Applied` = the candidate submitted their application
-- `Responded` = Company has responded (not yet interview)
-- `Interview` = active interview process
-- `Offer` = job offer received
-- `Rejected` = rejected by company
-- `Discarded` = discarded by candidate or offer closed
-- `SKIP` = doesn't fit, don't apply
-
-If the user asks to update a state, edit the corresponding row.
-
-Also show statistics:
-- Total applications
-- Breakdown by state
-- Average score
-- % with PDF generated
-- % with report generated
+(Full content: Plan 2.)

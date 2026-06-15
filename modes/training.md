@@ -1,27 +1,24 @@
-# Mode: training — Training & Course Evaluation
+# Training Mode (STUB)
 
-For each course/cert the candidate asks about, evaluate 6 dimensions:
+**Status:** STUB - content authored in Plan 2
+**See:** docs/superpowers/specs/2026-06-15-freelance-ops-fork-design.md
 
-| Dimension | What it evaluates |
-|-----------|-------------------|
-| North Star alignment | Does it bring closer to or further from the target goal? |
-| Recruiter signal | What do HMs think when they see this on a CV? |
-| Time and effort | Weeks × hours/week |
-| Opportunity cost | What else could be done during that time? |
-| Risks | Is content outdated? Weak brand? Too basic? |
-| Portfolio deliverable | Does it produce a demonstrable artifact? |
+This mode is reserved. The full prompt and evaluation logic will be written
+when the freelance content phase begins.
 
-## Verdicts
+For now, this file exists so that:
+- The state machine is fully wired
+- Slash command shells can resolve
+- CI structural tests pass
 
-- **DO** → 4-12 week plan with weekly deliverables and scoreboard
-- **DON'T DO** → better alternative with justification
-- **DO WITH TIMEBOX** (max X weeks) → condensed plan, essentials only
+The parent project's modes/ folder is the reference for the structure and
+depth of the final content. Each freelance mode will follow the same shape:
+  1. Purpose (one paragraph)
+  2. When to use
+  3. Inputs (what the user provides)
+  4. Output format
+  5. Workflow (step-by-step)
+  6. Edge cases
+  7. Examples
 
-## Priority
-
-Training that improves credibility in "production-grade AI":
-1. LLM evaluation and testing
-2. Observability and monitoring
-3. Cost/reliability trade-offs
-4. AI governance and safety
-5. Enterprise AI architecture
+(Full content: Plan 2.)

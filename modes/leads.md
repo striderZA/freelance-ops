@@ -1,4 +1,4 @@
-# Deep Mode (STUB)
+# Leads Mode (STUB)
 
 **Status:** STUB - content authored in Plan 2
 **See:** docs/superpowers/specs/2026-06-15-freelance-ops-fork-design.md
