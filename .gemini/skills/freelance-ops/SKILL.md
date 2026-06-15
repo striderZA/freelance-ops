@@ -3,7 +3,7 @@ name: freelance-ops
 description: AI freelance pipeline command center -- evaluate leads, draft proposals, scan platforms, track from New to Paid
 ---
 
-# freelance-ops (OpenCode shim)
+# freelance-ops (Gemini CLI shim)
 
 This is a thin shim. The canonical skill lives at `.agents/skills/freelance-ops/SKILL.md`.
 
