@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.0.0-rc (2026-06-15)
+
+freelance-ops is a heavy fork of santifer/career-ops, adapted for freelance/
+short-term contract work. This RC release delivers the full pipeline.
+
+### Plans completed
+
+- **Plan 1 (Foundation):** Git repo, brand rename, FTE content removed,
+  state machine (14 states), pipeline integrity scripts, CLI shells for
+  4 CLIs (72 commands), doctor.mjs, test suite
+- **Plan 2 (Mode Content):** 17 authored mode files + 6-block A-F + G
+  lead evaluation framework, onboarding interview, CLI integration
+- **Plan 3 (Providers & Collateral):** Upwork provider (Playwright-based),
+  manual paste provider, proposal/rate-card/portfolio HTML templates,
+  generate-pdf.mjs integration
+- **Plan 4 (Dashboard & Polish):** Go TUI dashboard rewritten for
+  10-column freelance schema, README/SETUP.md rewritten,
+  update-system.mjs updated, CI baseline documented
+
+### Key features
+
+- Lead evaluation with 6-block A-F scoring + Block G scam detection
+- Lead comparison, ranking, and "wait for better" recommendations
+- Tailored proposal generation (PDF)
+- Rate card and portfolio case study generation (PDF)
+- Cold outreach and follow-up cadence management
+- Client screening call prep
+- Win/loss pattern analysis
+- Course and project ROI evaluation
+- Interactive onboarding interview
+- Dashboard TUI with platform/rate columns and 14-state color mapping
+
 ## [1.10.0](https://github.com/santifer/freelance-ops/compare/freelance-ops-v1.9.0...freelance-ops-v1.10.0) (2026-06-11)
 
 
