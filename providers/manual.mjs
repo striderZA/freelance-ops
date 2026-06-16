@@ -1,145 +1,71 @@
-// @ts-check
+/**
+ * providers/manual.mjs — Manual job description parser for the --manual flag.
+ *
+ * Exports:
+ *   parseJobDescription(text) — Extract normalized lead from free-text JD
+ *   fetchFromUrl(url)         — Enrich lead by fetching the URL (page title, status)
+ */
 
 export function parseJobDescription(text) {
-  if (!text || typeof text !== 'string') {
-    return { client: '', role: '', platform: '', url: '', description: '', budget: '', budgetType: '', engagement: '', location: '', postedDate: '', source: '' };
-  }
+  if (!text) return null;
 
   const result = {
     client: '',
     role: '',
     platform: 'Direct',
     url: '',
-    description: text.trim(),
-    budget: '',
-    budgetType: '',
-    engagement: '',
+    rate: '',
     location: '',
-    postedDate: '',
-    source: 'manual',
+    notes: '',
   };
 
-  const urlMatch = text.match(/https?:\/\/[^\s)\]]+/);
-  if (urlMatch) result.url = urlMatch[0];
+  const lines = text.split('\n');
 
-  if (/upwork\.com/i.test(text)) result.platform = 'Upwork';
-  else if (/freelancer\.com/i.test(text)) result.platform = 'Freelancer';
-  else if (/fiverr\.com/i.test(text)) result.platform = 'Fiverr';
-  else if (/toptal\.com/i.test(text)) result.platform = 'Toptal';
-  else if (/linkedin\.com/i.test(text)) result.platform = 'LinkedIn';
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
 
-  const clientPatterns = [
-    /(?:Client|Company|Organization|Customer)\s*:\s*(.+)/i,
-    /@([a-zA-Z0-9_-]+)/,
-    /(?:Hiring for|Working with|Partnering with)\s+(.+?)(?:\.|$)/i,
-  ];
-  for (const pattern of clientPatterns) {
-    const match = text.match(pattern);
-    if (match) { result.client = match[1].trim(); break; }
-  }
+    const clientMatch = trimmed.match(/^(?:client|company|employer|organization|hiring\s*company)\s*[:;]\s*(.+)/i);
+    if (clientMatch) { result.client = clientMatch[1].trim(); continue; }
 
-  const rolePatterns = [
-    /(?:Role|Position|Title|Job Title)\s*:\s*(.+)/i,
-    /^#+\s*(.+)/m,
-    /^(?:We are looking for|We need|Hiring|Looking for)\s+(?:a|an|the)?\s*(.+?)(?:\.|$)/im,
-    /^([A-Z][A-Za-z\s]+(?:Engineer|Developer|Designer|Manager|Analyst|Scientist|Architect|Consultant|Lead|Head|Director|Specialist|Expert))/m,
-  ];
-  for (const pattern of rolePatterns) {
-    const match = text.match(pattern);
-    if (match) { result.role = match[1].trim(); break; }
-  }
-  if (!result.role) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.match(/^(https?:\/\/|#|Client|Company|Budget|Rate|Location|Remote|On-site)/i));
-    if (lines.length > 0) result.role = lines[0];
-  }
+    const roleMatch = trimmed.match(/^(?:role|title|position|job\s*(?:title)?)\s*[:;]\s*(.+)/i);
+    if (roleMatch) { result.role = roleMatch[1].trim(); continue; }
 
-  const budgetPatterns = [
-    /(?:Budget|Rate)\s*:\s*(\$[\d,.]+(?:\s*\/\s*(?:hr|hour|mo|month|project|fixed))?)/i,
-    /(\$[\d,.]+)\s*\/\s*(hr|hour|mo|month)/i,
-    /(\$[\d,.]+)\s*(?:per\s+)?(?:hour|hr|month|mo|project|fixed)/i,
-    /(?:rate|budget|pay|compensation)\s*(?::|is|of)\s*(\$[\d,.]+(?:\s*[-\s]+\$[\d,.]+)?(?:\s*\/\s*(?:hr|hour|mo|month|project|fixed))?)/i,
-  ];
-  for (const pattern of budgetPatterns) {
-    const match = text.match(pattern);
-    if (match) { result.budget = match[1].trim(); break; }
-  }
+    const rateMatch = trimmed.match(/^(?:rate|salary|budget|compensation|pay|hourly|annual|range)\s*[:;]\s*(.+)/i);
+    if (rateMatch) { result.rate = rateMatch[1].trim(); continue; }
 
-  if (result.budget) {
-    if (/\/(?:hr|hour)\b/i.test(result.budget)) result.budgetType = 'hourly';
-    else if (/\/(?:project|fixed)\b/i.test(result.budget) || /fixed/i.test(result.budget)) result.budgetType = 'fixed';
-    else result.budgetType = 'hourly';
-  }
+    const locMatch = trimmed.match(/^(?:location|loc|place|office|site|remote|onsite|hybrid)\s*[:;]\s*(.+)/i);
+    if (locMatch) { result.location = locMatch[1].trim(); continue; }
 
-  const locationPatterns = [
-    /(?:Location|Loc|On-site|Onsite|Office)\s*:\s*(.+)/i,
-    /\b(Remote|Hybrid|On-site|Onsite)\b/i,
-    /(?:based in|located in)\s+(.+?)(?:\.|,|$)/i,
-  ];
-  for (const pattern of locationPatterns) {
-    const match = text.match(pattern);
-    if (match) { result.location = match[1].trim(); break; }
-  }
-  if (!result.location && /\bRemote\b/i.test(text)) result.location = 'Remote';
+    const platMatch = trimmed.match(/^(?:platform|source|portal|via|site|board)\s*[:;]\s*(.+)/i);
+    if (platMatch) { result.platform = platMatch[1].trim(); continue; }
 
-  const engagementMatch = text.match(/\b(project|contract|freelance|gig|part-time|full-time)\b/i);
-  if (engagementMatch) result.engagement = engagementMatch[1].toLowerCase();
-
-  const datePatterns = [
-    /(?:Posted|Date|Published)\s*:\s*(\d{4}-\d{2}-\d{2})/i,
-    /(\d{4}-\d{2}-\d{2})/,
-  ];
-  for (const pattern of datePatterns) {
-    const match = text.match(pattern);
-    if (match) { result.postedDate = match[1]; break; }
+    const urlMatch = trimmed.match(/(https?:\/\/[^\s|)]+)/);
+    if (urlMatch && !result.url) {
+      result.url = urlMatch[1];
+    }
   }
 
   return result;
 }
 
 export async function fetchFromUrl(url) {
-  let html;
   try {
-    const { chromium } = await import('playwright');
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    html = await page.content();
-    await browser.close();
-  } catch {
-    try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(15000),
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-      });
-      html = await response.text();
-    } catch {
-      throw new Error(`Failed to fetch URL: ${url}`);
-    }
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    const html = await response.text();
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return {
+      fetched: true,
+      url,
+      title: titleMatch ? titleMatch[1].trim() : null,
+      status: response.status,
+    };
+  } catch (err) {
+    return { fetched: false, url, error: err.message };
   }
-
-  const text = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&[a-z]+;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return parseJobDescription(text);
-}
-
-export function normalizeLead(raw) {
-  return {
-    client: raw.client || '',
-    role: raw.role || '',
-    platform: raw.platform || 'Direct',
-    url: raw.url || '',
-    description: raw.description || '',
-    budget: raw.budget || '',
-    budgetType: raw.budgetType || 'hourly',
-    engagement: raw.engagement || 'project',
-    location: raw.location || '',
-    postedDate: raw.postedDate || new Date().toISOString().slice(0, 10),
-    source: 'manual',
-  };
 }

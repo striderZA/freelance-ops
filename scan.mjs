@@ -597,6 +597,78 @@ function guardStatusFor(code) {
   return 'skipped_invalid_url';
 }
 
+// ── Stdin reader (for --manual piped input) ──────────────────────────
+
+function readStdin() {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    process.stdin.setEncoding('utf-8');
+    process.stdin.on('data', chunk => chunks.push(chunk));
+    process.stdin.on('end', () => resolve(chunks.join('')));
+    process.stdin.on('error', reject);
+  });
+}
+
+// ── Manual mode (--manual flag) ──────────────────────────────────────
+
+async function handleManualMode(text) {
+  const { parseJobDescription, fetchFromUrl } = await import('./providers/manual.mjs');
+  const lead = parseJobDescription(text);
+
+  if (lead.url) {
+    const enrichment = await fetchFromUrl(lead.url);
+    if (enrichment.title && !lead.role) {
+      const cleaned = enrichment.title.replace(/\s*\|.*$/, '').trim();
+      lead.role = cleaned;
+    }
+  }
+
+  // Build the pipeline entry
+  const parts = [
+    `client: ${lead.client || 'Unknown'}`,
+    `role: ${lead.role || 'Unknown'}`,
+    `platform: ${lead.platform}`,
+  ];
+  if (lead.url) parts.push(`url: ${lead.url}`);
+  if (lead.rate) parts.push(`rate: ${lead.rate}`);
+  if (lead.location) parts.push(`location: ${lead.location}`);
+  const pipelineLine = `- ${parts.join(' | ')}`;
+
+  // Ensure pipeline.md exists with sections
+  let pipelineText;
+  if (existsSync(PIPELINE_PATH)) {
+    pipelineText = readFileSync(PIPELINE_PATH, 'utf-8');
+  } else {
+    pipelineText = '# Pipeline\n\n## Pendientes\n\n## Procesadas\n\n';
+  }
+
+  // Append under ## Pendientes
+  const marker = '## Pendientes';
+  const idx = pipelineText.indexOf(marker);
+  if (idx !== -1) {
+    const afterMarker = idx + marker.length;
+    const nextSection = pipelineText.indexOf('\n## ', afterMarker);
+    const insertAt = nextSection === -1 ? pipelineText.length : nextSection;
+    pipelineText = pipelineText.slice(0, insertAt) + '\n' + pipelineLine + '\n' + pipelineText.slice(insertAt);
+  } else {
+    pipelineText += `\n\n${marker}\n\n${pipelineLine}\n\n`;
+  }
+
+  writeFileSync(PIPELINE_PATH, pipelineText, 'utf-8');
+
+  // Print summary
+  console.log(`\n${'━'.repeat(45)}`);
+  console.log(`Manual Entry — ${new Date().toISOString().slice(0, 10)}`);
+  console.log(`${'━'.repeat(45)}`);
+  console.log(`  Client:    ${lead.client || '(not specified)'}`);
+  console.log(`  Role:      ${lead.role || '(not specified)'}`);
+  console.log(`  Platform:  ${lead.platform}`);
+  console.log(`  URL:       ${lead.url || '(none)'}`);
+  console.log(`  Rate:      ${lead.rate || '(not specified)'}`);
+  console.log(`  Location:  ${lead.location || '(not specified)'}`);
+  console.log(`\nEntry added to ${PIPELINE_PATH}.`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
@@ -615,6 +687,24 @@ async function main() {
   const rediscover = args.includes('--rediscover-404');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;
+
+  // --manual: parse job description text directly and exit
+  const manualFlag = args.indexOf('--manual');
+  if (manualFlag !== -1) {
+    let manualText;
+    if (manualFlag + 1 < args.length && !args[manualFlag + 1].startsWith('--')) {
+      manualText = args[manualFlag + 1];
+    } else if (!process.stdin.isTTY) {
+      manualText = await readStdin();
+    }
+    if (!manualText || !manualText.trim()) {
+      console.error('Usage: node scan.mjs --manual "Client: ... | Role: ..."');
+      console.error('   or: echo "..." | node scan.mjs --manual');
+      process.exit(1);
+    }
+    await handleManualMode(manualText);
+    return;
+  }
 
   // 1. Load providers
   const providers = await loadProviders(PROVIDERS_DIR);
