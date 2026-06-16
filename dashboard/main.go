@@ -160,7 +160,7 @@ func main() {
 	// Load applications
 	apps := data.ParseApplications(freelanceopsPath)
 	if apps == nil {
-		fmt.Fprintf(os.Stderr, "Error: could not find applications.md in %s or %s/data/\n", freelanceopsPath, freelanceopsPath)
+		fmt.Fprintf(os.Stderr, "Error: could not find leads.md in %s or %s/data/\n", freelanceopsPath, freelanceopsPath)
 		os.Exit(1)
 	}
 

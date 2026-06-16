@@ -62,21 +62,20 @@ const (
 	sortDate     = "date"
 	sortCompany  = "company"
 	sortStatus   = "status"
-	sortLocation = "location"
-	sortPay      = "pay"
-	sortLast     = "last"
+	sortPlatform = "platform"
+	sortRate     = "rate"
 )
 
 // Filter modes
 const (
-	filterAll       = "all"
-	filterEvaluated = "evaluated"
-	filterApplied   = "applied"
-	filterInterview = "interview"
-	filterSkip      = "skip"
-	filterRejected  = "rejected"
-	filterDiscarded = "discarded"
-	filterTop       = "top"
+	filterAll        = "all"
+	filterNew        = "new"
+	filterQualified  = "qualified"
+	filterProposed   = "proposed"
+	filterTop        = "top"
+	filterContracted = "contracted"
+	filterPaid       = "paid"
+	filterClosed     = "closed"
 )
 
 type pipelineTab struct {
@@ -86,21 +85,21 @@ type pipelineTab struct {
 
 var pipelineTabs = []pipelineTab{
 	{filterAll, "ALL"},
-	{filterEvaluated, "EVALUATED"},
-	{filterApplied, "APPLIED"},
-	{filterInterview, "INTERVIEW"},
+	{filterNew, "NEW"},
+	{filterQualified, "QUALIFIED"},
+	{filterProposed, "PROPOSED"},
 	{filterTop, "TOP ≥4"},
-	{filterSkip, "SKIP"},
-	{filterRejected, "REJECTED"},
-	{filterDiscarded, "DISCARDED"},
+	{filterContracted, "CONTRACTED"},
+	{filterPaid, "PAID"},
+	{filterClosed, "CLOSED"},
 }
 
-var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus, sortLocation, sortPay, sortLast}
+var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus, sortPlatform, sortRate}
 
-var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
+var statusOptions = []string{"new", "qualified", "proposed", "negotiating", "contracted", "in progress", "delivered", "invoiced", "paid", "reviewed", "rejected", "ghosted", "withdrew", "disputed"}
 
 // statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+var statusGroupOrder = []string{"new", "qualified", "proposed", "negotiating", "contracted", "in progress", "delivered", "invoiced", "paid", "reviewed", "rejected", "ghosted", "withdrew", "disputed"}
 
 // PipelineModel implements the career pipeline dashboard screen.
 type PipelineModel struct {
@@ -548,7 +547,11 @@ func (m *PipelineModel) applyFilterAndSort() {
 		case filterAll:
 			filtered = append(filtered, app)
 		case filterTop:
-			if app.Score >= 4.0 && norm != "skip" {
+			if app.Score >= 4.0 && norm != "rejected" && norm != "ghosted" && norm != "withdrew" && norm != "disputed" {
+				filtered = append(filtered, app)
+			}
+		case filterClosed:
+			if norm == "rejected" || norm == "ghosted" || norm == "withdrew" || norm == "disputed" {
 				filtered = append(filtered, app)
 			}
 		default:
@@ -594,21 +597,14 @@ func (m PipelineModel) sortLess() func(a, b model.CareerApplication) bool {
 		return func(a, b model.CareerApplication) bool {
 			return data.StatusPriority(a.Status) < data.StatusPriority(b.Status)
 		}
-	case sortLocation:
-		// Remote-first, then hybrid, then onsite; alphabetical city as tiebreaker.
+	case sortPlatform:
 		return func(a, b model.CareerApplication) bool {
-			ra, rb := workModeRank(a.WorkMode), workModeRank(b.WorkMode)
-			if ra != rb {
-				return ra < rb
-			}
-			return a.Location < b.Location
+			return strings.ToLower(a.Platform) < strings.ToLower(b.Platform)
 		}
-	case sortPay:
-		// Highest band ceiling first; unknown pay (0) sinks to the bottom.
-		return func(a, b model.CareerApplication) bool { return a.PayMax > b.PayMax }
-	case sortLast:
-		// Most recent contact first; empty dates sink to the bottom.
-		return func(a, b model.CareerApplication) bool { return a.LastContact > b.LastContact }
+	case sortRate:
+		return func(a, b model.CareerApplication) bool {
+			return a.Rate > b.Rate
+		}
 	default: // sortScore
 		return func(a, b model.CareerApplication) bool { return a.Score > b.Score }
 	}
@@ -824,7 +820,11 @@ func (m PipelineModel) countForFilter(filter string) int {
 		case filterAll:
 			count++
 		case filterTop:
-			if app.Score >= 4.0 && norm != "skip" {
+			if app.Score >= 4.0 && norm != "rejected" && norm != "ghosted" && norm != "withdrew" && norm != "disputed" {
+				count++
+			}
+		case filterClosed:
+			if norm == "rejected" || norm == "ghosted" || norm == "withdrew" || norm == "disputed" {
 				count++
 			}
 		default:
@@ -908,23 +908,15 @@ func (m PipelineModel) renderBody() string {
 	return strings.Join(lines, "\n")
 }
 
-// colWidths holds per-column rune budgets for the table. The location and
-// last-contact columns are adaptive: they appear only when the terminal is wide
-// enough, so narrow windows keep the original compact layout.
+// colWidths holds per-column rune budgets for the table.
 type colWidths struct {
-	num, score, date, company, status, loc, pay, last, role int
+	num, client, role, platform, status, rate, score, report int
 }
 
 func (m PipelineModel) columnWidths() colWidths {
-	c := colWidths{num: 5, score: 5, date: 10, company: 16, status: 12, pay: 16}
-	if m.width >= 110 {
-		c.loc = 20
-	}
-	if m.width >= 132 {
-		c.last = 10
-	}
-	fixed := c.num + c.score + c.date + c.company + c.status + c.pay + c.loc + c.last
-	c.role = m.width - fixed - 14 // separators + outer padding
+	c := colWidths{num: 4, client: 16, platform: 12, status: 12, rate: 10, score: 5, report: 6}
+	fixed := c.num + c.client + c.platform + c.status + c.rate + c.score + c.report
+	c.role = m.width - fixed - 16 // separators + outer padding
 	if c.role < 15 {
 		c.role = 15
 	}
@@ -987,18 +979,13 @@ func (m PipelineModel) renderColumnHeader() string {
 
 	segments := []string{
 		cell("#", cw.num),
-		h.Render("FIT"), // score cell is unpadded, always 3 runes wide
-		cell("APPLIED", cw.date),
-		cell("COMPANY", cw.company),
+		cell("CLIENT", cw.client),
 		cell("ROLE", cw.role),
+		cell("PLATFORM", cw.platform),
 		cell("STATUS", cw.status),
-	}
-	if cw.loc > 0 {
-		segments = append(segments, cell("LOCATION", cw.loc))
-	}
-	segments = append(segments, cell("PAY", cw.pay))
-	if cw.last > 0 {
-		segments = append(segments, cell("LAST", cw.last))
+		cell("RATE", cw.rate),
+		cell("SCORE", cw.score),
+		cell("REPORT", cw.report),
 	}
 
 	padStyle := lipgloss.NewStyle().Padding(0, 2)
@@ -1016,55 +1003,58 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	}
 	numStyle := lipgloss.NewStyle().Foreground(m.theme.Blue).Bold(true).Width(cw.num)
 
-	// Score with color
-	scoreStyle := m.scoreStyle(app.Score)
-	score := scoreStyle.Render(fmt.Sprintf("%.1f", app.Score))
-
-	// Company (truncate)
-	company := truncateRunes(app.Company, cw.company)
-	companyStyle := lipgloss.NewStyle().Foreground(m.theme.Text).Width(cw.company)
-
-	// Date (fixed width)
-	dateText := app.Date
-	if dateText == "" {
-		dateText = "—"
-	}
-	dateStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(cw.date)
+	// Client (Company field)
+	client := truncateRunes(app.Company, cw.client)
+	clientStyle := lipgloss.NewStyle().Foreground(m.theme.Text).Width(cw.client)
 
 	// Role (truncate)
 	role := truncateRunes(app.Role, cw.role)
 	roleStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(cw.role)
 
-	// Status with color -- fixed column
+	// Platform
+	platform := truncateRunes(app.Platform, cw.platform)
+	platformStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(cw.platform)
+
+	// Status with color
 	norm := data.NormalizeStatus(app.Status)
 	statusColor := m.statusColorMap()[norm]
 	statusStyle := lipgloss.NewStyle().Foreground(statusColor).Width(cw.status)
 	statusText := statusStyle.Render(statusLabel(norm))
 
+	// Rate
+	rateText := app.Rate
+	if rateText == "" {
+		rateText = "—"
+	}
+	rateStyle := lipgloss.NewStyle().Foreground(m.theme.Yellow).Width(cw.rate)
+
+	// Score
+	scoreText := app.ScoreRaw
+	if scoreText == "" && app.Score > 0 {
+		scoreText = fmt.Sprintf("%.1f", app.Score)
+	}
+	if scoreText == "" {
+		scoreText = "—"
+	}
+	scoreStyle := m.scoreStyle(app.Score).Width(cw.score)
+	score := scoreStyle.Render(truncateRunes(scoreText, cw.score))
+
+	// Report number
+	reportText := "—"
+	if app.ReportNumber != "" {
+		reportText = fmt.Sprintf("#%s", app.ReportNumber)
+	}
+	reportStyle := lipgloss.NewStyle().Foreground(m.theme.Blue).Width(cw.report)
+
 	segments := []string{
 		numStyle.Render(truncateRunes(numText, cw.num)),
-		score,
-		dateStyle.Render(truncateRunes(dateText, cw.date)),
-		companyStyle.Render(company),
+		clientStyle.Render(client),
 		roleStyle.Render(role),
+		platformStyle.Render(platform),
 		statusText,
-	}
-
-	if cw.loc > 0 {
-		segments = append(segments, m.renderLocCell(app, cw.loc))
-	}
-	segments = append(segments, m.renderPayCell(app, cw.pay))
-	if cw.last > 0 {
-		lastText := "—"
-		if app.LastContact != "" {
-			lastText = formatTimeAgo(app.LastContact)
-		}
-		lastStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext).Width(cw.last)
-		if app.LastContact != "" && app.LastContact != app.Date {
-			// Activity after applying (rejection, recruiter view, screen) — surface it.
-			lastStyle = lastStyle.Foreground(m.theme.Text)
-		}
-		segments = append(segments, lastStyle.Render(truncateRunes(lastText, cw.last)))
+		rateStyle.Render(truncateRunes(rateText, cw.rate)),
+		score,
+		reportStyle.Render(truncateRunes(reportText, cw.report)),
 	}
 
 	line := " " + strings.Join(segments, " ")
@@ -1165,11 +1155,11 @@ func (m PipelineModel) renderPreview() string {
 }
 
 // previewOutcome returns "what happened" to a closed-out application — the raw
-// status (which often carries the decision date, e.g. "descartado 2026-03-12")
+// status (which often carries the decision date, e.g. "rejected 2026-03-12")
 // plus the tracker notes holding the reason. Returns "" for apps still in play.
 func previewOutcome(app model.CareerApplication) string {
 	switch data.NormalizeStatus(app.Status) {
-	case "discarded", "skip", "rejected":
+	case "rejected", "ghosted", "withdrew", "disputed":
 	default:
 		return ""
 	}
@@ -1274,14 +1264,20 @@ func (m PipelineModel) scoreStyle(score float64) lipgloss.Style {
 
 func (m PipelineModel) statusColorMap() map[string]lipgloss.Color {
 	return map[string]lipgloss.Color{
-		"interview": m.theme.Green,
-		"offer":     m.theme.Green,
-		"applied":   m.theme.Sky,
-		"responded": m.theme.Blue,
-		"evaluated": m.theme.Text,
-		"skip":      m.theme.Red,
-		"rejected":  m.theme.Subtext,
-		"discarded": m.theme.Subtext,
+		"new":          m.theme.Subtext,
+		"qualified":    m.theme.Blue,
+		"proposed":     m.theme.Sky,
+		"negotiating":  m.theme.Yellow,
+		"contracted":   m.theme.Green,
+		"in progress":  m.theme.Green,
+		"delivered":    m.theme.Green,
+		"invoiced":     m.theme.Text,
+		"paid":         m.theme.Green,
+		"reviewed":     m.theme.Text,
+		"rejected":     m.theme.Red,
+		"ghosted":      m.theme.Subtext,
+		"withdrew":     m.theme.Subtext,
+		"disputed":     m.theme.Red,
 	}
 }
 
@@ -1328,22 +1324,34 @@ func truncateRunes(s string, maxRunes int) string {
 
 func statusLabel(norm string) string {
 	switch norm {
-	case "interview":
-		return "Interview"
-	case "offer":
-		return "Offer"
-	case "responded":
-		return "Responded"
-	case "applied":
-		return "Applied"
-	case "evaluated":
-		return "Evaluated"
-	case "skip":
-		return "Skip"
+	case "new":
+		return "New"
+	case "qualified":
+		return "Qualified"
+	case "proposed":
+		return "Proposed"
+	case "negotiating":
+		return "Negotiating"
+	case "contracted":
+		return "Contracted"
+	case "in progress":
+		return "In Progress"
+	case "delivered":
+		return "Delivered"
+	case "invoiced":
+		return "Invoiced"
+	case "paid":
+		return "Paid"
+	case "reviewed":
+		return "Reviewed"
 	case "rejected":
 		return "Rejected"
-	case "discarded":
-		return "Discarded"
+	case "ghosted":
+		return "Ghosted"
+	case "withdrew":
+		return "Withdrew"
+	case "disputed":
+		return "Disputed"
 	default:
 		return norm
 	}

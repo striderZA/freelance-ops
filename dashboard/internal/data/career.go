@@ -45,14 +45,14 @@ func resolveReportPath(freelanceopsPath, trackerPath, link string) string {
 	return link
 }
 
-// ParseApplications reads applications.md and returns parsed applications.
-// It tries both {path}/applications.md and {path}/data/applications.md for compatibility.
+// ParseApplications reads leads.md and returns parsed applications.
+// It tries both {path}/leads.md and {path}/data/leads.md for compatibility.
 func ParseApplications(freelanceopsPath string) []model.CareerApplication {
-	filePath := filepath.Join(freelanceopsPath, "applications.md")
+	filePath := filepath.Join(freelanceopsPath, "leads.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		// Fallback: try data/ subdirectory
-		filePath = filepath.Join(freelanceopsPath, "data", "applications.md")
+		filePath = filepath.Join(freelanceopsPath, "data", "leads.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
 			return nil
@@ -91,7 +91,7 @@ func ParseApplications(freelanceopsPath string) []model.CareerApplication {
 			}
 		}
 
-		if len(fields) < 8 {
+		if len(fields) < 10 {
 			continue
 		}
 
@@ -101,17 +101,19 @@ func ParseApplications(freelanceopsPath string) []model.CareerApplication {
 			trackerNumber = parsedNumber
 		}
 		app := model.CareerApplication{
-			Number:  trackerNumber,
-			Date:    fields[1],
-			Company: fields[2],
-			Role:    fields[3],
-			Status:  fields[5],
-			HasPDF:  strings.Contains(fields[6], "\u2705"),
+			Number:   trackerNumber,
+			Date:     fields[1],
+			Company:  fields[2],
+			Role:     fields[3],
+			Platform: fields[4],
+			Status:   fields[5],
+			Rate:     fields[6],
+			HasPDF:   strings.Contains(fields[8], "\u2705"),
 		}
 
-		// Parse score (field 4 = Score column)
-		app.ScoreRaw = fields[4]
-		if sm := reScoreValue.FindStringSubmatch(fields[4]); sm != nil {
+		// Parse score (field 7 = Score column)
+		app.ScoreRaw = fields[7]
+		if sm := reScoreValue.FindStringSubmatch(fields[7]); sm != nil {
 			app.Score, _ = strconv.ParseFloat(sm[1], 64)
 		}
 
@@ -121,14 +123,14 @@ func ParseApplications(freelanceopsPath string) []model.CareerApplication {
 		// back to a freelanceopsPath-relative path, which is what every
 		// consumer joins against. Legacy root-relative links are kept as a
 		// fallback when the resolved file does not exist.
-		if rm := reReportLink.FindStringSubmatch(fields[7]); rm != nil {
+		if rm := reReportLink.FindStringSubmatch(fields[8]); rm != nil {
 			app.ReportNumber = rm[1]
 			app.ReportPath = resolveReportPath(freelanceopsPath, filePath, rm[2])
 		}
 
-		// Notes (field 8 if exists)
-		if len(fields) > 8 {
-			app.Notes = fields[8]
+		// Notes (field 9 if exists)
+		if len(fields) > 9 {
+			app.Notes = fields[9]
 		}
 
 		// Lift location / work mode / pay / last-contact out of the notes free-text
@@ -483,7 +485,7 @@ func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 		if app.HasPDF {
 			m.WithPDF++
 		}
-		if status != "skip" && status != "rejected" && status != "discarded" {
+		if status == "qualified" || status == "proposed" || status == "negotiating" || status == "contracted" || status == "in progress" {
 			m.Actionable++
 		}
 	}
@@ -496,35 +498,43 @@ func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 }
 
 // NormalizeStatus normalizes raw status text to a canonical form.
-// Aliases match states.yml -- keep in sync with freelance-ops/states.yml
 func NormalizeStatus(raw string) string {
 	// Strip markdown bold and trailing dates
 	s := strings.ReplaceAll(raw, "**", "")
 	s = strings.TrimSpace(strings.ToLower(s))
-	// Strip trailing date (e.g., "aplicado 2026-03-12")
 	if idx := strings.Index(s, " 202"); idx > 0 {
 		s = strings.TrimSpace(s[:idx])
 	}
 
 	switch {
-	// Most restrictive first — accepts both English and Spanish
-	case strings.Contains(s, "no aplicar") || strings.Contains(s, "no_aplicar") || s == "skip" || strings.Contains(s, "geo blocker"):
-		return "skip"
-	case strings.Contains(s, "interview") || strings.Contains(s, "entrevista"):
-		return "interview"
-	case s == "offer" || strings.Contains(s, "oferta"):
-		return "offer"
-	case strings.Contains(s, "responded") || strings.Contains(s, "respondido"):
-		return "responded"
-	case strings.Contains(s, "applied") || strings.Contains(s, "aplicado") || s == "enviada" || s == "aplicada" || s == "sent":
-		return "applied"
-	case strings.Contains(s, "rejected") || strings.Contains(s, "rechazado") || s == "rechazada":
+	case strings.Contains(s, "new") || s == "nuevo":
+		return "new"
+	case strings.Contains(s, "qualified") || s == "qual":
+		return "qualified"
+	case strings.Contains(s, "proposed") || s == "sent" || s == "submitted":
+		return "proposed"
+	case strings.Contains(s, "negotiating") || s == "in negotiation":
+		return "negotiating"
+	case strings.Contains(s, "contracted") || s == "hired" || s == "signed":
+		return "contracted"
+	case strings.Contains(s, "in progress") || s == "wip" || s == "working":
+		return "in progress"
+	case strings.Contains(s, "delivered") || s == "complete" || s == "completed":
+		return "delivered"
+	case strings.Contains(s, "invoiced"):
+		return "invoiced"
+	case strings.Contains(s, "paid"):
+		return "paid"
+	case strings.Contains(s, "reviewed"):
+		return "reviewed"
+	case strings.Contains(s, "rejected") || strings.Contains(s, "declined"):
 		return "rejected"
-	case strings.Contains(s, "discarded") || strings.Contains(s, "descartado") || s == "descartada" || s == "cerrada" || s == "cancelada" ||
-		strings.HasPrefix(s, "duplicado") || strings.HasPrefix(s, "dup"):
-		return "discarded"
-	case strings.Contains(s, "evaluated") || strings.Contains(s, "evaluada") || s == "condicional" || s == "hold" || s == "monitor" || s == "evaluar" || s == "verificar":
-		return "evaluated"
+	case strings.Contains(s, "ghosted") || strings.Contains(s, "no response"):
+		return "ghosted"
+	case strings.Contains(s, "withdrew") || strings.Contains(s, "withdrawn"):
+		return "withdrew"
+	case strings.Contains(s, "disputed"):
+		return "disputed"
 	default:
 		return s
 	}
@@ -568,12 +578,12 @@ func LoadReportSummary(freelanceopsPath, reportPath string) (archetype, tldr, re
 	return
 }
 
-// UpdateApplicationStatus updates the status of an application in applications.md.
+// UpdateApplicationStatus updates the status of an application in leads.md.
 func UpdateApplicationStatus(freelanceopsPath string, app model.CareerApplication, newStatus string) error {
-	filePath := filepath.Join(freelanceopsPath, "applications.md")
+	filePath := filepath.Join(freelanceopsPath, "leads.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		filePath = filepath.Join(freelanceopsPath, "data", "applications.md")
+		filePath = filepath.Join(freelanceopsPath, "data", "leads.md")
 		content, err = os.ReadFile(filePath)
 		if err != nil {
 			return err
@@ -619,24 +629,30 @@ func cleanTableCell(s string) string {
 // StatusPriority returns the sort priority for a status (lower = higher priority).
 func StatusPriority(status string) int {
 	switch NormalizeStatus(status) {
-	case "interview":
+	case "paid":
 		return 0
-	case "offer":
+	case "contracted":
 		return 1
-	case "responded":
+	case "in progress":
 		return 2
-	case "applied":
+	case "qualified":
 		return 3
-	case "evaluated":
+	case "proposed":
 		return 4
-	case "skip":
+	case "negotiating":
 		return 5
-	case "rejected":
+	case "new":
 		return 6
-	case "discarded":
+	case "rejected":
 		return 7
-	default:
+	case "ghosted":
 		return 8
+	case "withdrew":
+		return 9
+	case "disputed":
+		return 10
+	default:
+		return 11
 	}
 }
 
@@ -661,10 +677,10 @@ func ComputeProgressMetrics(apps []model.CareerApplication) model.ProgressMetric
 			}
 		}
 
-		if norm == "offer" {
+		if norm == "paid" || norm == "contracted" {
 			pm.TotalOffers++
 		}
-		if norm != "skip" && norm != "rejected" && norm != "discarded" {
+		if norm != "rejected" && norm != "ghosted" && norm != "withdrew" && norm != "disputed" {
 			pm.ActiveApps++
 		}
 	}
@@ -674,26 +690,25 @@ func ComputeProgressMetrics(apps []model.CareerApplication) model.ProgressMetric
 	}
 
 	// Funnel: each stage counts all apps that reached at least that stage.
-	// An app in "interview" has passed through evaluated -> applied -> responded -> interview.
 	total := len(apps)
-	applied := statusCounts["applied"] + statusCounts["responded"] + statusCounts["interview"] + statusCounts["offer"] + statusCounts["rejected"]
-	responded := statusCounts["responded"] + statusCounts["interview"] + statusCounts["offer"]
-	interview := statusCounts["interview"] + statusCounts["offer"]
-	offer := statusCounts["offer"]
+	qualified := statusCounts["qualified"] + statusCounts["proposed"] + statusCounts["negotiating"] + statusCounts["contracted"] + statusCounts["in progress"] + statusCounts["delivered"] + statusCounts["invoiced"] + statusCounts["paid"] + statusCounts["reviewed"] + statusCounts["rejected"] + statusCounts["ghosted"] + statusCounts["withdrew"] + statusCounts["disputed"]
+	proposed := statusCounts["proposed"] + statusCounts["negotiating"] + statusCounts["contracted"] + statusCounts["in progress"] + statusCounts["delivered"] + statusCounts["invoiced"] + statusCounts["paid"] + statusCounts["reviewed"]
+	contracted := statusCounts["contracted"] + statusCounts["in progress"] + statusCounts["delivered"] + statusCounts["invoiced"] + statusCounts["paid"] + statusCounts["reviewed"]
+	paid := statusCounts["paid"] + statusCounts["reviewed"]
 
 	pm.FunnelStages = []model.FunnelStage{
-		{Label: "Evaluated", Count: total, Pct: 100.0},
-		{Label: "Applied", Count: applied, Pct: safePct(applied, total)},
-		{Label: "Responded", Count: responded, Pct: safePct(responded, applied)},
-		{Label: "Interview", Count: interview, Pct: safePct(interview, applied)},
-		{Label: "Offer", Count: offer, Pct: safePct(offer, applied)},
+		{Label: "New", Count: total, Pct: 100.0},
+		{Label: "Qualified", Count: qualified, Pct: safePct(qualified, total)},
+		{Label: "Proposed", Count: proposed, Pct: safePct(proposed, qualified)},
+		{Label: "Contracted", Count: contracted, Pct: safePct(contracted, proposed)},
+		{Label: "Paid", Count: paid, Pct: safePct(paid, proposed)},
 	}
 
-	// Rates (relative to applied)
-	if applied > 0 {
-		pm.ResponseRate = float64(responded) / float64(applied) * 100
-		pm.InterviewRate = float64(interview) / float64(applied) * 100
-		pm.OfferRate = float64(offer) / float64(applied) * 100
+	// Rates (relative to qualified)
+	if qualified > 0 {
+		pm.ResponseRate = float64(proposed) / float64(qualified) * 100
+		pm.InterviewRate = float64(contracted) / float64(qualified) * 100
+		pm.OfferRate = float64(paid) / float64(qualified) * 100
 	}
 
 	// Score distribution
