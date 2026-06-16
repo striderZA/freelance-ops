@@ -1,4 +1,4 @@
-description = "freelance-ops: deep (STUB - Plan 2)"
+description = "freelance-ops: deep - deep-dive research on a freelance client or company"
 prompt = """
 Read and execute modes/deep.md with the user's argument.
 """

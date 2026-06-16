@@ -1,4 +1,4 @@
-description = "freelance-ops: screening (STUB - Plan 2)"
+description = "freelance-ops: screening - client screening call preparation"
 prompt = """
 Read and execute modes/screening.md with the user's argument.
 """

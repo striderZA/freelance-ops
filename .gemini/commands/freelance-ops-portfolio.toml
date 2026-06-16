@@ -1,4 +1,4 @@
-description = "freelance-ops: portfolio (STUB - Plan 2)"
+description = "freelance-ops: portfolio - generate/update freelance rate card and portfolio case studies"
 prompt = """
 Read and execute modes/portfolio.md with the user's argument.
 """

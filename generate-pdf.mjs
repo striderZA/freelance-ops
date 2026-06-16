@@ -13,13 +13,42 @@
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
-import { mkdirSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Ensure output directory exists (fresh setup)
 mkdirSync(resolve(__dirname, 'output'), { recursive: true });
+
+/**
+ * Replace {{VARIABLE}} placeholders and {{#each ARRAY}}...{{/each}} loops
+ * in an HTML template with values from a vars object.
+ *
+ * @param {string} html - Template HTML with {{VAR}} and {{#each}} syntax.
+ * @param {Object} vars - Flat key-value map (strings/numbers) plus arrays for #each blocks.
+ * @returns {string} Fully populated HTML string.
+ */
+function replaceTemplateVars(html, vars) {
+  let result = html;
+  for (const [key, value] of Object.entries(vars)) {
+    if (typeof value === 'string' || typeof value === 'number') {
+      result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(value));
+    }
+  }
+  result = result.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, arrayName, template) => {
+    const items = vars[arrayName];
+    if (!Array.isArray(items)) return '';
+    return items.map(item => {
+      let itemHtml = template;
+      for (const [key, value] of Object.entries(item)) {
+        itemHtml = itemHtml.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(value ?? ''));
+      }
+      return itemHtml;
+    }).join('\n');
+  });
+  return result;
+}
 
 /**
  * Normalize text for ATS compatibility by converting problematic Unicode.
@@ -176,11 +205,15 @@ async function generatePDF() {
   const args = process.argv.slice(2);
 
   // Parse arguments
-  let inputPath, outputPath, format = 'a4';
+  let inputPath, outputPath, format = 'a4', template, varsStr;
 
   for (const arg of args) {
     if (arg.startsWith('--format=')) {
       format = arg.split('=')[1].toLowerCase();
+    } else if (arg.startsWith('--template=')) {
+      template = arg.split('=')[1].toLowerCase();
+    } else if (arg.startsWith('--vars=')) {
+      varsStr = arg.substring('--vars='.length);
     } else if (!inputPath) {
       inputPath = arg;
     } else if (!outputPath) {
@@ -188,20 +221,75 @@ async function generatePDF() {
     }
   }
 
-  if (!inputPath || !outputPath) {
-    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]');
-    process.exit(1);
-  }
-
-  inputPath = resolve(inputPath);
-  outputPath = resolve(outputPath);
-
   // Validate format
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
     console.error(`Invalid format "${format}". Use: ${validFormats.join(', ')}`);
     process.exit(1);
   }
+
+  // Template mode: load template, replace vars, generate output path
+  if (template) {
+    const validTemplates = ['proposal', 'rate-card', 'portfolio'];
+    if (!validTemplates.includes(template)) {
+      console.error(`Invalid template "${template}". Use: ${validTemplates.join(', ')}`);
+      process.exit(1);
+    }
+
+    const templatePath = resolve(__dirname, 'templates', `${template}-template.html`);
+    if (!existsSync(templatePath)) {
+      console.error(`Template not found: ${templatePath}`);
+      process.exit(1);
+    }
+
+    let html = await readFile(templatePath, 'utf-8');
+    const vars = varsStr ? JSON.parse(varsStr) : {};
+    html = replaceTemplateVars(html, vars);
+
+    if (!outputPath) {
+      const slug = (vars.CLIENT_NAME || vars.PROJECT_TITLE || vars.NAME || 'document')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      outputPath = resolve(__dirname, 'output', template, `${slug}.pdf`);
+    } else {
+      outputPath = resolve(outputPath);
+    }
+
+    console.log(`📄 Template: ${template}`);
+    console.log(`📁 Output: ${outputPath}`);
+
+    // Resolve font paths relative to freelance-ops/fonts/
+    const fontsDir = resolve(__dirname, 'fonts');
+    html = html.replace(
+      /url\(['"]?(?:\.\/)?fonts\//g,
+      `url('file://${fontsDir}/`
+    );
+    html = html.replace(
+      /file:\/\/([^'")]+)\.(woff2?|ttf|otf)['"]?\)/g,
+      `file://$1.$2')`
+    );
+
+    // Normalize text for ATS compatibility (issue #1)
+    const normalized = normalizeTextForATS(html);
+    html = normalized.html;
+    const totalReplacements = Object.values(normalized.replacements).reduce((a, b) => a + b, 0);
+    if (totalReplacements > 0) {
+      const breakdown = Object.entries(normalized.replacements).map(([k, v]) => `${k}=${v}`).join(', ');
+      console.log(`🧹 ATS normalization: ${totalReplacements} replacements (${breakdown})`);
+    }
+
+    return renderHtmlToPdf(html, outputPath, { format, baseDir: __dirname });
+  }
+
+  // Standard mode (existing behavior)
+  if (!inputPath || !outputPath) {
+    console.error('Usage: node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]');
+    console.log('');
+    console.log('Template mode: node generate-pdf.mjs --template <name> --vars \'{"key":"value"}\' [--format=letter|a4]');
+    process.exit(1);
+  }
+
+  inputPath = resolve(inputPath);
+  outputPath = resolve(outputPath);
 
   console.log(`📄 Input:  ${inputPath}`);
   console.log(`📁 Output: ${outputPath}`);
@@ -220,7 +308,7 @@ async function generatePDF() {
   // Resolve font paths relative to freelance-ops/fonts/
   const fontsDir = resolve(__dirname, 'fonts');
   html = html.replace(
-    /url\(['"]?\.\/fonts\//g,
+    /url\(['"]?(?:\.\/)?fonts\//g,
     `url('file://${fontsDir}/`
   );
   // Close any unclosed quotes from the replacement (handles all font formats)

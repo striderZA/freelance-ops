@@ -1,4 +1,4 @@
-description = "freelance-ops: pitch (STUB - Plan 2)"
+description = "freelance-ops: pitch - submit a proposal on a freelance platform (Upwork, Toptal, Direct)"
 prompt = """
 Read and execute modes/pitch.md with the user's argument.
 """

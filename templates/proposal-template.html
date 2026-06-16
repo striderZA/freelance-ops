@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proposal — {{CLIENT_NAME}}</title>
+<style>
+  @font-face { font-family: 'Space Grotesk'; src: url('fonts/space-grotesk-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Sans'; src: url('fonts/dm-sans-latin.woff2') format('woff2'); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20mm 25mm;
+  }
+  .header { margin-bottom: 6mm; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24pt; font-weight: 700; color: #111; margin-bottom: 2mm; }
+  .meta { font-size: 10pt; color: #888; }
+  .hook { margin-bottom: 8mm; }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14pt;
+    font-weight: 600;
+    color: #222;
+    margin-top: 6mm;
+    margin-bottom: 3mm;
+    padding-bottom: 1mm;
+    border-bottom: 1.5pt solid #e0e0e0;
+  }
+  ul, ol { margin-bottom: 4mm; padding-left: 5mm; }
+  li { margin-bottom: 2mm; line-height: 1.5; }
+  .cta { margin-top: 6mm; padding: 3mm 4mm; background: #f5f7fa; border-radius: 1mm; }
+  .cta p { margin: 0; }
+  .footer {
+    margin-top: 10mm;
+    padding-top: 3mm;
+    border-top: 0.5pt solid #ccc;
+    font-size: 9.5pt;
+    color: #888;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Proposal for {{CLIENT_NAME}}</h1>
+    <p class="meta">{{DATE}} · {{SCOPE}}</p>
+  </div>
+
+  <div class="hook">
+    <p>{{HOOK}}</p>
+  </div>
+
+  <h2>Relevant Experience</h2>
+  <ul>
+    {{#each EXPERIENCE}}
+    <li><strong>{{title}}</strong> — {{description}}</li>
+    {{/each}}
+  </ul>
+
+  <h2>Plan</h2>
+  <ol>
+    {{#each PLAN}}
+    <li><strong>{{milestone}}</strong> — {{details}}</li>
+    {{/each}}
+  </ol>
+
+  <h2>Timeline</h2>
+  <p>{{TIMELINE}}</p>
+
+  <h2>Price</h2>
+  <p>{{PRICE}}</p>
+
+  <div class="cta">
+    <p>{{CTA}}</p>
+  </div>
+
+  <div class="footer">
+    <p>{{NAME}} · {{EMAIL}} · {{PHONE}}</p>
+  </div>
+</body>
+</html>

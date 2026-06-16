@@ -2,179 +2,68 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Case Study — {{CLIENT_NAME}} | {{NAME}}</title>
+<title>Case Study: {{CLIENT_NAME}} — {{PROJECT_TITLE}}</title>
 <style>
+  @font-face { font-family: 'Space Grotesk'; src: url('fonts/space-grotesk-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Sans'; src: url('fonts/dm-sans-latin.woff2') format('woff2'); }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  @page { size: A4; margin: 0; }
-
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-  @font-face { font-family: 'Space Grotesk'; src: url('../fonts/space-grotesk-latin.woff2') format('woff2'); }
-  @font-face { font-family: 'DM Sans'; src: url('../fonts/dm-sans-latin.woff2') format('woff2'); }
-
   body {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.5;
+    font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
     color: #1a1a1a;
-    background: #ffffff;
     max-width: 210mm;
     margin: 0 auto;
-    padding: 22mm 25mm;
+    padding: 15mm 25mm;
   }
-
-  .header {
-    margin-bottom: 20pt;
-    padding-bottom: 12pt;
-    border-bottom: 2px solid hsl(187, 74%, 32%);
-  }
-
-  .header h1 {
+  .header { margin-bottom: 6mm; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22pt; font-weight: 700; color: #111; margin-bottom: 1mm; }
+  .subtitle { font-size: 10.5pt; color: #888; }
+  h2 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 22pt;
-    font-weight: 700;
-    color: #111;
-    margin-bottom: 4pt;
-  }
-
-  .header .subtitle {
-    font-size: 10pt;
-    color: #666;
-  }
-
-  .section {
-    margin-bottom: 14pt;
-  }
-
-  .section h2 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 11pt;
+    font-size: 13pt;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: hsl(187, 74%, 32%);
-    margin-bottom: 4pt;
+    color: #222;
+    margin-top: 5mm;
+    margin-bottom: 2mm;
+    padding-bottom: 1mm;
+    border-bottom: 1.5pt solid #e0e0e0;
   }
-
-  .section p, .section ul {
+  p { margin-bottom: 2mm; }
+  .engagement {
+    margin-top: 6mm;
+    padding: 3mm 4mm;
+    background: #f8f8f8;
+    border-radius: 1mm;
     font-size: 10pt;
-    color: #333;
   }
-
-  .section ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .section ul li {
-    padding-left: 12pt;
-    position: relative;
-    margin-bottom: 2pt;
-  }
-
-  .section ul li::before {
-    content: "\2022";
-    position: absolute;
-    left: 0;
-    color: hsl(187, 74%, 32%);
-  }
-
-  .engagement-row {
-    margin-top: 6pt;
-    font-size: 9.5pt;
-    color: #555;
-  }
-
-  .engagement-row strong {
-    color: #333;
-  }
-
-  .bottom-row {
-    display: flex;
-    gap: 20pt;
-    margin-top: 20pt;
-    padding-top: 12pt;
-    border-top: 1px solid #ddd;
-  }
-
-  .bottom-col {
-    flex: 1;
-  }
-
-  .bottom-col h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 9pt;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: hsl(187, 74%, 32%);
-    margin-bottom: 4pt;
-  }
-
-  .bottom-col p, .bottom-col a {
-    font-size: 9pt;
-    color: #555;
-    line-height: 1.4;
-  }
-
-  .bottom-col a {
-    color: hsl(187, 74%, 32%);
-    text-decoration: none;
-  }
+  .engagement p { margin-bottom: 1mm; }
+  .engagement strong { color: #444; }
 </style>
 </head>
 <body>
   <div class="header">
-    <h1>Case Study: {{CLIENT_NAME}} — {{PROJECT_TITLE}}</h1>
-    <div class="subtitle">{{NAME}} · {{DATE}}</div>
+    <h1>Case Study: {{CLIENT_NAME}}</h1>
+    <p class="subtitle">{{PROJECT_TITLE}}</p>
   </div>
 
-  <div class="section">
-    <h2>Problem</h2>
-    <p>{{PROBLEM}}</p>
-  </div>
+  <h2>Problem</h2>
+  <p>{{PROBLEM}}</p>
 
-  <div class="section">
-    <h2>Approach</h2>
-    <p>{{APPROACH}}</p>
-  </div>
+  <h2>Approach</h2>
+  <p>{{APPROACH}}</p>
 
-  <div class="section">
-    <h2>Results</h2>
-    <p>{{RESULTS}}</p>
-  </div>
+  <h2>Results</h2>
+  <p>{{RESULTS}}</p>
 
-  <div class="section">
-    <h2>Tech Stack</h2>
-    <p>{{TECH_STACK}}</p>
-  </div>
+  <h2>Tech Stack</h2>
+  <p>{{TECH_STACK}}</p>
 
-  {{#each SECTIONS}}
-  <div class="section">
-    <h2>{{heading}}</h2>
-    <p>{{content}}</p>
-  </div>
-  {{/each}}
-
-  <div class="section">
-    <h2>Engagement</h2>
-    <div class="engagement-row">
-      <strong>Timeline:</strong> {{TIMELINE}} &middot;
-      <strong>Rate:</strong> {{RATE}} &middot;
-      <strong>Platform:</strong> {{PLATFORM}}
-    </div>
-  </div>
-
-  <div class="bottom-row">
-    <div class="bottom-col">
-      <h3>Contact</h3>
-      <p>{{NAME}}<br>{{EMAIL}}<br>{{PHONE}}</p>
-    </div>
-    <div class="bottom-col">
-      <h3>Links</h3>
-      <p>{{LINKS_LINE}}</p>
-    </div>
+  <div class="engagement">
+    <p><strong>Timeline:</strong> {{TIMELINE}}</p>
+    <p><strong>Rate:</strong> {{RATE}}</p>
+    <p><strong>Platform:</strong> {{PLATFORM}}</p>
   </div>
 </body>
 </html>

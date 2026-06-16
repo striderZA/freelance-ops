@@ -1,4 +1,4 @@
-description = "freelance-ops: nurture (STUB - Plan 2)"
+description = "freelance-ops: nurture - lead follow-up cadence management"
 prompt = """
 Read and execute modes/nurture.md with the user's argument.
 """

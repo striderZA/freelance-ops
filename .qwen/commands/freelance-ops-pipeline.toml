@@ -1,4 +1,4 @@
-description = "freelance-ops: pipeline (STUB - Plan 2)"
+description = "freelance-ops: pipeline - process all pending URLs from the pipeline inbox (batch evaluation)"
 prompt = """
 Read and execute modes/pipeline.md with the user's argument.
 """

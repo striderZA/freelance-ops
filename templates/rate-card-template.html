@@ -4,218 +4,86 @@
 <meta charset="UTF-8">
 <title>Rate Card — {{NAME}}</title>
 <style>
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('../fonts/space-grotesk-latin-ext.woff2') format('woff2');
-    font-weight: 400 700;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: 'DM Sans';
-    src: url('../fonts/dm-sans-latin-ext.woff2') format('woff2');
-    font-weight: 400 700;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: 'DM Sans';
-    src: url('../fonts/dm-sans-latin.woff2') format('woff2');
-    font-weight: 400 700;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: 'Space Grotesk';
-    src: url('../fonts/space-grotesk-latin.woff2') format('woff2');
-    font-weight: 400 700;
-    font-display: swap;
-  }
-
+  @font-face { font-family: 'Space Grotesk'; src: url('fonts/space-grotesk-latin.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Sans'; src: url('fonts/dm-sans-latin.woff2') format('woff2'); }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body {
     font-family: 'DM Sans', Helvetica, Arial, sans-serif;
-    font-size: 10pt;
-    line-height: 1.5;
-    color: #1a1a1a;
-    background: #ffffff;
-    padding: 48pt 48pt 36pt;
-    max-width: 595pt;
-    margin: 0 auto;
-  }
-
-  .header {
-    text-align: center;
-    margin-bottom: 24pt;
-    border-bottom: 2pt solid #1a1a1a;
-    padding-bottom: 16pt;
-  }
-
-  .header h1 {
-    font-family: 'Space Grotesk', Helvetica, Arial, sans-serif;
-    font-weight: 700;
-    font-size: 22pt;
-    letter-spacing: -0.5pt;
-    margin-bottom: 4pt;
-  }
-
-  .header .date {
-    font-size: 9pt;
-    color: #888888;
-  }
-
-  .section-title {
-    font-family: 'Space Grotesk', Helvetica, Arial, sans-serif;
-    font-weight: 600;
     font-size: 11pt;
-    text-transform: uppercase;
-    letter-spacing: 1pt;
-    margin-top: 20pt;
-    margin-bottom: 8pt;
-    color: #444444;
-  }
-
-  table.services {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10pt;
-  }
-
-  table.services thead tr {
-    border-bottom: 1.5pt solid #1a1a1a;
-  }
-
-  table.services thead th {
-    font-family: 'Space Grotesk', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    font-size: 9pt;
-    text-transform: uppercase;
-    letter-spacing: 0.5pt;
-    text-align: left;
-    padding: 6pt 8pt;
-    color: #555555;
-  }
-
-  table.services thead th:last-child {
-    text-align: right;
-  }
-
-  table.services thead th:nth-child(2) {
-    text-align: right;
-  }
-
-  table.services tbody tr {
-    border-bottom: 0.5pt solid #e0e0e0;
-  }
-
-  table.services tbody tr:nth-child(even) {
-    background: #f7f7f7;
-  }
-
-  table.services tbody td {
-    padding: 8pt;
-    vertical-align: top;
-  }
-
-  table.services tbody td:first-child {
-    font-weight: 500;
-  }
-
-  table.services tbody td:nth-child(2) {
-    font-family: 'Space Grotesk', monospace;
-    font-weight: 600;
-    text-align: right;
-    white-space: nowrap;
-    width: 100pt;
-  }
-
-  table.services tbody td:last-child {
-    text-align: right;
-    color: #666666;
-    width: 100pt;
-  }
-
-  .terms-block {
-    background: #f9f9f9;
-    border-left: 3pt solid #1a1a1a;
-    padding: 10pt 12pt;
-    margin-top: 4pt;
-    font-size: 9.5pt;
     line-height: 1.5;
-    white-space: pre-wrap;
-  }
-
-  .availability-block {
-    margin-top: 4pt;
-    font-size: 9.5pt;
-    line-height: 1.5;
-    white-space: pre-wrap;
-  }
-
-  .footer {
-    margin-top: 28pt;
-    padding-top: 12pt;
-    border-top: 0.5pt solid #cccccc;
-    text-align: center;
-    font-size: 9pt;
-    color: #888888;
-    line-height: 1.6;
-  }
-
-  .footer .name {
-    font-family: 'Space Grotesk', Helvetica, Arial, sans-serif;
-    font-weight: 600;
-    font-size: 10pt;
     color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 15mm 25mm;
   }
-
-  .footer .separator {
-    color: #cccccc;
-    margin: 0 4pt;
+  .header { text-align: center; margin-bottom: 8mm; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22pt; font-weight: 700; margin-bottom: 1mm; }
+  .meta { font-size: 10pt; color: #888; }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13pt;
+    font-weight: 600;
+    margin-top: 6mm;
+    margin-bottom: 3mm;
+    padding-bottom: 1mm;
+    border-bottom: 1.5pt solid #e0e0e0;
+  }
+  p { margin-bottom: 2mm; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+  th, td { padding: 2.5mm 3mm; text-align: left; border-bottom: 0.5pt solid #ddd; }
+  th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 0.5pt solid #999;
+  }
+  td { font-size: 10.5pt; }
+  .footer {
+    margin-top: 8mm;
+    padding-top: 3mm;
+    border-top: 0.5pt solid #ccc;
+    font-size: 9.5pt;
+    color: #888;
+    text-align: center;
   }
 </style>
 </head>
 <body>
+  <div class="header">
+    <h1>Rate Card — {{NAME}}</h1>
+    <p class="meta">{{DATE}}</p>
+  </div>
 
-<div class="header">
-  <h1>Rate Card — {{NAME}}</h1>
-  <div class="date">{{DATE}}</div>
-</div>
+  <h2>Services</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Rate</th>
+        <th>Typical Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each SERVICES}}
+      <tr>
+        <td><strong>{{service}}</strong></td>
+        <td>{{rate}}</td>
+        <td>{{duration}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
 
-<div class="section-title">Services</div>
+  <h2>Payment Terms</h2>
+  <p>{{TERMS}}</p>
 
-<table class="services">
-  <thead>
-    <tr>
-      <th>Service</th>
-      <th>Rate</th>
-      <th>Duration</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each SERVICES}}
-    <tr>
-      <td>{{name}}</td>
-      <td>{{rate}}</td>
-      <td>{{duration}}</td>
-    </tr>
-    {{/each}}
-  </tbody>
-</table>
+  <h2>Availability</h2>
+  <p>{{AVAILABILITY}}</p>
 
-<div class="section-title">Payment Terms</div>
-<div class="terms-block">{{TERMS}}</div>
-
-<div class="section-title">Availability</div>
-<div class="availability-block">{{AVAILABILITY}}</div>
-
-<div class="footer">
-  <div class="name">{{NAME}}</div>
-  <div>{{EMAIL}} <span class="separator">·</span> {{PHONE}}</div>
-</div>
-
+  <div class="footer">
+    <p>{{NAME}} · {{EMAIL}} · {{PHONE}}</p>
+  </div>
 </body>
 </html>

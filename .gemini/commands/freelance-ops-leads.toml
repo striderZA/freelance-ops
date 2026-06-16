@@ -1,4 +1,4 @@
-description = "freelance-ops: leads (STUB - Plan 2)"
+description = "freelance-ops: leads - compare and rank multiple freelance leads side by side"
 prompt = """
 Read and execute modes/leads.md with the user's argument.
 """

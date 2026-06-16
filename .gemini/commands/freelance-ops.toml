@@ -1,4 +1,4 @@
-description = "freelance-ops: menu (STUB - Plan 2)"
+description = "freelance-ops: menu - show all freelance-ops commands or auto-detect from input"
 prompt = """
-Show the freelance-ops menu or evaluate the lead at the URL/text given as the argument.
+Show the freelance-ops menu or auto-detect and dispatch the user's input to the right mode.
 """
