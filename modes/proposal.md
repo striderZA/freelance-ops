@@ -94,10 +94,11 @@ The proposal HTML should be wrapped in a clean, readable layout. Use a single-fi
    - Bullet points with proper `•` markers, no custom icons.
    - A footer with "Proposal prepared by {name} — {date}".
 
-Run the intermediate HTML through `generate-pdf.mjs`:
+Render to PDF: write the proposal HTML using the template variables format, then run:
 ```bash
-node generate-pdf.mjs /tmp/proposal-{num}-{client-slug}.html output/proposals/{num}-{client-slug}-proposal.pdf --format=a4
+node generate-pdf.mjs --template proposal --vars '{"CLIENT_NAME":"...","HOOK":"...","EXPERIENCE":[...],"PLAN":[...],"TIMELINE":"...","PRICE":"...","CTA":"...","NAME":"...","EMAIL":"...","PHONE":"..."}'
 ```
+This produces `output/proposals/{num}-{slug}.pdf`.
 
 ### Chat output
 
@@ -228,37 +229,17 @@ Follow these steps in order. Do not skip or reorder.
 
 18. If the rate is acceptable, log the rate in the proposal header. If the rate is above target, note it as a win.
 
-### Step 6 — Assemble HTML and generate PDF
+### Step 6 — Render to PDF
 
-19. Build the HTML document:
-    - Check if `templates/proposal-template.html` exists. If yes, read it, inject content into `{{content}}`, `{{client_name}}`, `{{date}}`, `{{author_name}}` placeholders.
-    - If no template exists, build inline HTML with:
-      ```html
-      <!DOCTYPE html><html><head><meta charset="utf-8">
-      <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 12pt; line-height: 1.5; color: #222; max-width: 700px; margin: 0 auto; padding: 40px; }
-        h1 { font-size: 22pt; margin-bottom: 4pt; }
-        h2 { font-size: 14pt; margin-top: 24pt; margin-bottom: 8pt; border-bottom: 1px solid #ddd; padding-bottom: 4pt; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 6pt; }
-        .footer { margin-top: 40px; font-size: 9pt; color: #888; border-top: 1px solid #eee; padding-top: 12px; }
-      </style></head><body>
-      {{content}}
-      <div class="footer">Proposal prepared by {{author_name}} — {{date}}</div>
-      </body></html>
-      ```
-    - Apply `_shared.md` writing style rules: no em dashes, no buzzwords, active voice, short sentences.
+19. Write the proposal content as template variables matching the `--vars` JSON structure.
 
-20. Save the HTML to `/tmp/proposal-{num}-{client-slug}.html`.
-
-21. Run PDF generation:
+20. Run PDF generation:
     ```bash
-    node generate-pdf.mjs /tmp/proposal-{num}-{client-slug}.html output/proposals/{num}-{client-slug}-proposal.pdf --format=a4
+    node generate-pdf.mjs --template proposal --vars '{"CLIENT_NAME":"...","HOOK":"...","EXPERIENCE":[...],"PLAN":[...],"TIMELINE":"...","PRICE":"...","CTA":"...","NAME":"...","EMAIL":"...","PHONE":"..."}'
     ```
+    This produces `output/proposals/{num}-{slug}.pdf`.
 
-22. Verify the PDF was created. Check the output from `generate-pdf.mjs` for page count and size.
-
-23. Delete the intermediate HTML file.
+21. Verify the PDF was created. Check the output from `generate-pdf.mjs` for page count and size.
 
 ### Step 7 — Present to user
 

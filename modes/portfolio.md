@@ -34,7 +34,11 @@ This mode generates two outputs: a **rate card** (your services, rates, payment 
 
 ### Rate card
 
-Generate `output/rate-card.pdf` — single-page A4 PDF via `templates/rate-card-template.html` → `node generate-pdf.mjs`. The PDF header includes your name, email, location, and "Valid from {date}."
+Generate `output/rate-card.pdf` — single-page A4 PDF via:
+```bash
+node generate-pdf.mjs --template rate-card --vars '{"NAME":"...","DATE":"...","SERVICES":[...],"TERMS":"...","AVAILABILITY":"...","EMAIL":"...","PHONE":"..."}'
+```
+The PDF header includes your name, email, location, and "Valid from {date}."
 
 Also write the markdown source to `output/rate-card.md` for quick reference and version history:
 
@@ -65,7 +69,10 @@ Also write the markdown source to `output/rate-card.md` for quick reference and 
 
 ### Case study
 
-For each case study, generate `output/portfolio/{slug}.pdf` — A4 PDF via `templates/portfolio-template.html` → `node generate-pdf.mjs`.
+For each case study, generate `output/portfolio/{slug}.pdf` — A4 PDF via:
+```bash
+node generate-pdf.mjs --template portfolio --vars '{"CLIENT_NAME":"...","PROJECT_TITLE":"...",...}'
+```
 
 Also write the markdown source to `output/portfolio/{slug}.md`:
 
@@ -153,7 +160,11 @@ Ask the user what to generate if not specified in the argument:
     - Read `config/profile.yml` `availability` (hours_per_week, timezone_overlap, lead_time, current_load).
     - Fall back to `modes/_profile.md` `## Your Availability`.
 13. Write to `output/rate-card.md` in the rate card markdown format.
-14. Render to PDF: write the HTML via `templates/rate-card-template.html` (inserting the rate card fields into the template), then run `node generate-pdf.mjs output/rate-card.html output/rate-card.pdf`.
+14. Render rate card: run
+    ```bash
+    node generate-pdf.mjs --template rate-card --vars '{"NAME":"...","DATE":"...","SERVICES":[...],"TERMS":"...","AVAILABILITY":"...","EMAIL":"...","PHONE":"..."}'
+    ```
+    This produces `output/rate-card.pdf`.
 15. Validate the PDF exists at `output/rate-card.pdf`. If not, warn the user and keep the markdown as a fallback.
 
 ### Step 3 — Draft case studies
@@ -169,7 +180,11 @@ Ask the user what to generate if not specified in the argument:
        - **Tech Stack:** Infer from the `scope` description and the user's known tech stack (from `profile.md` and `_profile.md` niches). For example, "RAG pipeline" → "LangChain, PostgreSQL, pgvector, OpenAI, FastAPI."
        - **Engagement:** Use the engagement's `rate`, `duration`, `platform`, and `rating` directly. If `client` is "Confidential," note "Confidential — NDA" in the client name field.
     d. Write to `output/portfolio/{slug}.md`.
-    e. Render to PDF: write HTML via `templates/portfolio-template.html`, run `node generate-pdf.mjs output/portfolio/{slug}.html output/portfolio/{slug}.pdf`.
+    e. For each case study, run:
+       ```bash
+       node generate-pdf.mjs --template portfolio --vars '{"CLIENT_NAME":"...","PROJECT_TITLE":"...",...}'
+       ```
+       This produces `output/portfolio/{slug}.pdf`.
     f. Validate the PDF exists.
 18. Write or update `output/portfolio/index.md` with the table of all generated case studies.
 
