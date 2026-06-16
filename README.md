@@ -33,9 +33,9 @@ and proof points -- by chatting. Nothing to edit by hand.
 
 ## Status
 
-v0.1.0 (Foundation). See `docs/superpowers/specs/2026-06-15-freelance-ops-fork-design.md`
-for scope. Phase 1 (this release) delivers the fork skeleton, state machine, and CLI shells.
-Phase 2+ adds the freelance content (modes, providers, templates, dashboard).
+v0.3.0 — Plans 1–3 (foundation, core modes, portal scanner) complete. Plan 4 (freelance
+pipeline, proposal generation, rate negotiation) in progress. See
+`docs/superpowers/specs/2026-06-15-freelance-ops-fork-design.md` for full scope.
 
 ---
 
@@ -85,70 +85,76 @@ npm run gemini:eval -- "JD text here"
 
 ## Usage
 
-freelance-ops is a single slash command with multiple modes:
+freelance-ops exposes 18 commands under a single slash:
+
+**Starter flow:** paste lead → `/freelance-ops evaluate` → review report → `/freelance-ops propose` → `/freelance-ops tracker`
 
 ```
-/freelance-ops                → Show all available commands
-/freelance-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
-/freelance-ops scan           → Scan portals for new offers
-/freelance-ops pdf            → Generate ATS-optimized CV
-/freelance-ops cover          → Cover letter generator (paste JD or /freelance-ops cover {slug})
-/freelance-ops batch          → Batch evaluate multiple offers
-/freelance-ops tracker        → View application status
-/freelance-ops apply          → Fill application forms with AI
-/freelance-ops pipeline       → Process pending URLs
-/freelance-ops contacto       → LinkedIn outreach message
-/freelance-ops deep           → Deep company research
-/freelance-ops training       → Evaluate a course/cert
-/freelance-ops project        → Evaluate a portfolio project
+/freelance-ops                   → Show all commands / auto-detect pasted URL or lead
+/freelance-ops evaluate          → Full evaluation pipeline (qualify + report + PDF + tracker)
+/freelance-ops propose           → Generate tailored proposal PDF
+/freelance-ops scan              → Scan platforms (Upwork, Toptal, Contra) for new leads
+/freelance-ops pipeline          → Process pending leads from inbox
+/freelance-ops batch             → Batch evaluate multiple leads
+/freelance-ops tracker           → View pipeline status (New → Paid)
+/freelance-ops outreach          → Client outreach message
+/freelance-ops research          → Deep client / market research
+/freelance-ops interview         → Interview preparation
+/freelance-ops patterns          → Analyze win/loss patterns
+/freelance-ops followup          → Follow-up cadence calculator
+/freelance-ops rates             → Rate card management / negotiation
+/freelance-ops contract          → Contract review checklist
+/freelance-ops training          → Evaluate a course or certification
+/freelance-ops project           → Evaluate a portfolio project
+/freelance-ops update            → Update freelance-ops system
+/freelance-ops help              → Full command reference
 ```
 
-Or just paste a job URL or description directly -- freelance-ops auto-detects it and runs the full pipeline.
+Or just paste a URL or description — freelance-ops auto-detects it and runs the full pipeline.
 
 ## How It Works
 
 ```
-You paste a job URL or description
+Lead discovered (Upwork / Toptal / Contra / referral)
         │
         ▼
-┌──────────────────┐
-│  Archetype       │  Classifies: LLMOps / Agentic / PM / SA / FDE / Transformation
-│  Detection       │
-└────────┬─────────┘
-         │
-┌────────▼─────────┐
-│  A-F Evaluation  │  Match, gaps, comp research, STAR stories
-│  (reads cv.md)   │
-└────────┬─────────┘
-         │
-    ┌────┼────┐
-    ▼    ▼    ▼
- Report  PDF  Tracker
-  .md   .pdf   .tsv
+┌────────────────┐
+│  Qualify       │  A-F scoring: match, budget, timeline, risk
+│  (Block A-F)   │
+└───────┬────────┘
+        │
+┌───────▼────────┐
+│  Propose       │  Tailored proposal, rate card, proof points
+│                │
+└───────┬────────┘
+        │
+┌───────▼────────┐
+│  Contract      │  Scope, milestones, payment terms, IP clauses
+└───────┬────────┘
+        │
+┌───────▼────────┐
+│  Deliver       │  Tracked milestones, client comms
+└───────┬────────┘
+        │
+┌───────▼────────┐
+│  Invoice       │  Send invoice, track payment
+└───────┬────────┘
+        │
+┌───────▼────────┐
+│  Paid          │  Review, archive, add proof point
+└────────────────┘
 ```
 
-## Pre-configured Portals
+## Pre-configured Platforms
 
-The scanner comes with **45+ companies** ready to scan and **19 search queries** across major job boards. Copy `templates/portals.example.yml` to `portals.yml` and add your own:
+The scanner integrates with freelance platforms to discover leads:
 
-**AI Labs:** Anthropic, OpenAI, Mistral, Cohere, LangChain, Pinecone
-**Voice AI:** ElevenLabs, PolyAI, Parloa, Hume AI, Deepgram, Vapi, Bland AI
-**AI Platforms:** Retool, Airtable, Vercel, Temporal, Glean, Arize AI
-**Contact Center:** Ada, LivePerson, Sierra, Decagon, Talkdesk, Genesys
-**Enterprise:** Salesforce, Twilio, Gong, Dialpad
-**LLMOps:** Langfuse, Weights & Biases, Lindy, Cognigy, Speechmatics
-**Automation:** n8n, Zapier, Make.com
-**European:** Factorial, Attio, Tinybird, Clarity AI, Travelperk
+- **Upwork** (v1) — RSS feed scanning via `node scan.mjs`
+- **Toptal** — Talent directory matching
+- **Contra** — Portfolio-based opportunity matching
+- **Fiverr** (future) — Planned integration
 
-**Job boards searched:** Ashby, Greenhouse, Lever, Wellfound, Workable, RemoteFront
-
-By default `node scan.mjs` (a.k.a. `npm run scan`) trusts what each ATS feed returns. Some companies leave stale postings in their public API even after the role is closed, so those expired entries can leak into `pipeline.md`. Pass `--verify` to launch Playwright after the API pass and drop expired postings before they hit the pipeline:
-
-```bash
-node scan.mjs --verify          # zero-token discovery + Playwright liveness check
-```
-
-The verification is sequential and only runs against new offers (after dedup), so the cost stays bounded.
+Copy `config/platforms.example.yml` to `config/platforms.yml` to configure your search terms and filters.
 
 ## Dashboard TUI
 
@@ -156,8 +162,8 @@ The built-in terminal dashboard lets you browse your pipeline visually:
 
 ```bash
 cd dashboard
-go build -o career-dashboard .
-./career-dashboard --path ..
+go build -o freelance-dashboard .
+./freelance-dashboard --path ..
 ```
 
 Features: 6 filter tabs, 4 sort modes, grouped/flat view, lazy-loaded previews, inline status changes.
@@ -172,29 +178,47 @@ freelance-ops/
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
-│   └── profile.example.yml      # Template for your profile
-├── modes/                       # 15 skill modes
+│   ├── profile.example.yml      # Template for your profile
+│   ├── profile.yml              # Your profile (create this)
+│   ├── rates.example.yml        # Template for your rate card
+│   ├── rates.yml                # Your rate card (create this)
+│   ├── platforms.example.yml    # Template for platform config
+│   └── platforms.yml            # Your platform config (create this)
+├── modes/                       # 30+ skill modes (EN + 7 locales)
 │   ├── _shared.md               # Shared context (customize this)
-│   ├── oferta.md                # Single evaluation
-│   ├── pdf.md                   # PDF generation
-│   ├── cover.md                 # Cover letter generation
-│   ├── scan.md                  # Portal scanner
-│   ├── batch.md                 # Batch processing
-│   └── ...
+│   ├── _profile.md              # Your personalization (never overwritten)
+│   ├── lead.md                  # Lead qualification
+│   ├── proposal.md              # Proposal generation
+│   ├── pitch.md                 # Pitch / outreach
+│   ├── scan.md                  # Platform scanner
+│   ├── screening.md             # Client screening
+│   ├── nurture.md               # Lead nurturing
+│   ├── oferta.md                # Offer evaluation
+│   └── ...                      # onboarding, portfolio, contract, etc.
 ├── templates/
-│   ├── cv-template.html         # ATS-optimized CV template
+│   ├── proposal-template.html   # Proposal PDF template
+│   ├── portfolio-template.html  # Portfolio showcase template
+│   ├── cover-letter-template.html
+│   ├── rate-card-template.html  # Rate card HTML template
 │   ├── portals.example.yml      # Scanner config template
-│   └── states.yml               # Canonical statuses
+│   └── states.yml               # Canonical pipeline statuses
+├── providers/
+│   ├── upwork.mjs               # Upwork RSS feed provider
+│   ├── manual.mjs               # Manual lead entry provider
+│   ├── local-parser.mjs         # Local file parser
+│   ├── _http.mjs                # Shared HTTP utilities
+│   └── _types.js                # Shared type definitions
 ├── batch/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
 ├── dashboard/                   # Go TUI pipeline viewer
-├── data/                        # Your tracking data (gitignored)
+├── data/                        # leads.md, pipeline.md, clients.yml
 ├── reports/                     # Evaluation reports (gitignored)
 ├── output/                      # Generated PDFs (gitignored)
 ├── fonts/                       # Space Grotesk + DM Sans
 ├── docs/                        # Setup, customization, architecture
-└── examples/                    # Sample CV, report, proof points
+├── examples/                    # Sample CV, report, proof points
+└── scaffolder/                  # One-shot project scaffolding
 ```
 
 ## Tech Stack
@@ -205,10 +229,9 @@ freelance-ops/
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 ![Bubble Tea](https://img.shields.io/badge/Bubble_Tea-FF75B5?style=flat&logo=go&logoColor=white)
 
-- **Agent**: Claude Code with custom skills and modes
-- **PDF**: Playwright/Puppeteer + HTML template
-- **Cover letters**: HTML template + Playwright (A4 PDF, same pipeline as CVs)
-- **Scanner**: Playwright + Greenhouse API + WebSearch
+- **Agent**: Any AI coding CLI (Claude Code, OpenCode, Gemini, Codex, Qwen)
+- **PDF**: Playwright + HTML templates (proposal, portfolio, rate card)
+- **Scanner**: Upwork RSS feed + provider-based architecture
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files
 
