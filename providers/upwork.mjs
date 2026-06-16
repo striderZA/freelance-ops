@@ -11,7 +11,10 @@
  *   - Respects robots.txt intent (lightweight, rate-limited)
  */
 
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealth from 'puppeteer-extra-plugin-stealth';
+
+chromium.use(stealth());
 
 const UPWORK_SEARCH_BASE = 'https://www.upwork.com/nx/search/jobs/';
 const DEFAULT_MAX_RESULTS = 25;
