@@ -1,43 +1,22 @@
-# freelance-ops Platforms Configuration
-# Copy this file to config/platforms.yml and customize with the platforms
-# you actually use. doctor.mjs treats platforms.yml as required user data;
-# never commit your copy.
-#
-# (Legacy: portals.yml at the project root is still accepted as an alias.)
+# Freelance-Ops platform search configuration
+# This file is a template — copy to config/platforms.yml and customize.
 
-# Platforms you actively scan for leads. Add or remove entries freely;
-# scan.mjs reads this list when it builds the daily scan queue.
 platforms:
   - name: Upwork
     enabled: true
-    profile_url: "https://www.upwork.com/freelancers/~your-id"
-    notes: "Best for short engagements, fixed-price contracts"
-  - name: Toptal
-    enabled: true
-    profile_url: "https://www.toptal.com/resume/your-id"
-    notes: "Higher bar, higher rates"
-  - name: LinkedIn
-    enabled: true
-    profile_url: "https://www.linkedin.com/in/your-handle"
-    notes: "Source of warm intros and direct outreach"
+    max_results: 25
+    searches:
+      - query: "AI consulting"
+        category: "web-mobile-software-dev"
+        min_budget: "$75/hr"
+      - query: "machine learning"
+        category: "data-science-analytics"
+        min_budget: "$80/hr"
+      - query: "developer"
+        min_budget: "$50/hr"
 
-# Keywords the scanner uses to filter job titles. Customize for your niche.
-title_filter:
-  positive:
-    - "AI Engineer"
-    - "ML Engineer"
-    - "LLM Engineer"
-    - "Applied AI"
-  negative:
-    - "Intern"
-    - "Junior"
-    - "Entry-level"
-    - "Sales"
-    - "Recruiter"
-
-# Platforms to skip (e.g., noisy boards, low-quality leads).
-excluded_platforms: []
-
-# Refresh cadence in days. The scanner re-checks URLs first seen longer
-# than this ago.
-recheck_after_days: 30
+# Search queries feed into scan.mjs and the Upwork provider.
+# They should match the niches in your modes/_profile.md.
+# Categories are: web-mobile-software-dev, data-science-analytics,
+# design-creative, sales-marketing, admin-support, writing-translation,
+# customer-support, accounting-consulting
